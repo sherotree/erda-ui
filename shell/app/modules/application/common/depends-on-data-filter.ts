@@ -78,8 +78,7 @@ const setParents = (item: any, target: any[]) => {
 
 const mergeTree = (index: number, tree: any[], target: any[]) => {
   if (!target[index]) {
-    // eslint-disable-next-line no-param-reassign
-    target[index] = [];
+    set(target,'index',[])
   }
 
   let match = false;

@@ -20,7 +20,7 @@ import {
 } from 'application/common/components/dice-yaml-editor-type';
 import diceFLowUtil from 'application/common/dice-flow-util';
 import { isEqualCustomizer, randomId, sortByLineType } from 'application/common/yml-flow-util';
-import { isEqualWith } from 'lodash';
+import { isEqualWith, set } from 'lodash';
 import React, { Component } from 'react';
 // @ts-ignore
 import Snap from 'snapsvg-cjs';
@@ -280,8 +280,7 @@ export default class DiceYamlCanvas extends Component<IProps, any> {
           this.animation(item, path, point);
         }, 1000);
       });
-      // eslint-disable-next-line no-param-reassign
-      item.animate = snapAnimate;
+      set(item, 'animate', snapAnimate);
     }
   }
 

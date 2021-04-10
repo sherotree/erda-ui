@@ -15,7 +15,7 @@ import { FormComponentProps } from 'antd/es/form';
 import ListInput from 'application/common/components/list-input-group';
 import VariableInput from 'application/common/components/object-input-group';
 import React from 'react';
-import { cloneDeep, map, isEmpty, omit, pick, get, filter, head, transform, isEqual, forEach } from 'lodash';
+import { cloneDeep, map, isEmpty, omit, pick, get, set, filter, head, transform, isEqual, forEach } from 'lodash';
 import { Icon as CustomIcon, useUpdate } from 'common';
 import { Form, Button, Input, Popover, InputNumber, Icon, Collapse, Alert, Spin, Select } from 'nusi';
 import './edit-service.scss';
@@ -441,8 +441,7 @@ const EditStage = (props: IEditStageProps & FormComponentProps) => {
         const resources = head(filter(state.resource.data, (item) => item.name === 'resources'));
         const originResource = transform(get(resources, 'struct'), (result, item: { name: string, default: string | number }) => {
           const { name, default: d } = item;
-          // eslint-disable-next-line no-param-reassign
-          result[name] = +d;
+          set(result, name, +d);
         }, {});
         const editedResources = get(data, 'resource.resources');
         forEach(Object.entries(editedResources), ([key, value]) => { editedResources[key] = +(value as string); });

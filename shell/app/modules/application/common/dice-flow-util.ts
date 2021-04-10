@@ -21,6 +21,7 @@ import DiceYamlEditorItem, { IDiceYamlEditorItem } from 'application/common/comp
 import PointComponentAbstract, { IPointInfo } from 'application/common/components/point-component-abstract';
 import { linePosition, randomId } from 'application/common/yml-flow-util';
 import { IArrowPosition, IFlowItem } from 'application/common/components/flow-item';
+import { set } from 'lodash';
 import i18n from 'i18n';
 
 const PADDING = 48;
@@ -175,29 +176,21 @@ const dataMarket = (pointComponent: PointComponentAbstract<any, any>, dataSource
 
   points.forEach((point: any, index: number) => {
     if (minLeft < 0) {
-      // eslint-disable-next-line no-param-reassign
-      point.position.x = (point.position.x + Math.abs(minLeft) + PADDING / 2);
-      // eslint-disable-next-line no-param-reassign
-      point._position.x = point.position.x;
+      set(point, 'position.x', (point.position.x + Math.abs(minLeft) + PADDING / 2));
+      set(point, '_position.x', point.position.x);
     }
     if (minTop < 0) {
-      // eslint-disable-next-line no-param-reassign
-      point.position.y = (point.position.y + Math.abs(minTop) + PADDING / 2);
-      // eslint-disable-next-line no-param-reassign
-      point._position.y = point.position.y;
+      set(point, 'position.y', (point.position.y + Math.abs(minTop) + PADDING / 2));
+      set(point, '_position.y', point.position.y);
     }
 
     if (index === 0) {
-      // eslint-disable-next-line no-param-reassign
-      point.arrowPosition = getCenterPointArrowsPosition(info, 0, point.position);
-      // eslint-disable-next-line no-param-reassign
-      point.depNum = dependsItems.length;
+      set(point, 'arrowPosition', getCenterPointArrowsPosition(info, 0, point.position));
+      set(point, 'depNum', dependsItems.length);
     } else {
       const arrowPosition = getArrowPosition(point.status, point.position, info);
-      // eslint-disable-next-line no-param-reassign
-      point.arrowPosition = [arrowPosition];
-      // eslint-disable-next-line no-param-reassign
-      point.depNum = 0;
+      set(point, 'arrowPosition', [arrowPosition]);
+      set(point, 'depNum', 0);
     }
   });
 

@@ -12,7 +12,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import PointComponentAbstract from 'application/common/components/point-component-abstract';
-import { sortBy, uniqueId, forEach, get, omit, map, last } from 'lodash';
+import { sortBy, uniqueId, forEach, get, set, omit, map, last } from 'lodash';
 import i18n from 'i18n';
 
 export const getEnvFromRefName = (branch: string) => {
@@ -579,8 +579,7 @@ const clearNullFromArray = (array: any[]) => {
           // eslint-disable-next-line no-param-reassign
           delete i[key];
         } else if (i[key] instanceof Array) {
-          // eslint-disable-next-line no-param-reassign
-          i[key] = clearNullFromArray(i[key]);
+          set(i, key, clearNullFromArray(i[key]));
         } else if (typeof i[key] === 'object') {
           clearNullValue(i[key]);
         }
@@ -600,8 +599,7 @@ export const clearNullValue = (json: any) => {
       // eslint-disable-next-line no-param-reassign
       delete json[key];
     } else if (value instanceof Array) {
-      // eslint-disable-next-line no-param-reassign
-      json[key] = clearNullFromArray(value);
+      set(json, key, clearNullFromArray(value));
     } else if (typeof value === 'object') {
       clearNullValue(value);
     }

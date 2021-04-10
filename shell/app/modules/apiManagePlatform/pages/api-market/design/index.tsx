@@ -191,8 +191,7 @@ const ApiDesign = () => {
   const beforeunload = React.useCallback(e => {
     const msg = `${i18n.t('project:not saved yet, confirm to leave')}?`;
     if (changeRef.current) {
-      // eslint-disable-next-line no-param-reassign
-      (e || window.event).returnValue = msg;
+      set(e || window.event, 'returnValue', msg);
     }
 
     return msg;
@@ -372,8 +371,7 @@ const ApiDesign = () => {
       const refTypePath = get(innerData, [QUOTE_PREFIX, 0, '$ref']) || innerData[QUOTE_PREFIX_NO_EXTENDED];
       if (refTypePath) {
         const _type = refTypePath.split('/').slice(-1)[0];
-        // eslint-disable-next-line no-param-reassign
-        !pathMap[_type] && (pathMap[_type] = []);
+        !pathMap[_type] && set(pathMap, _type, []);
         if (!pathMap[_type].includes(prefixPath)) {
           pathMap[_type].push(prefixPath);
         }
