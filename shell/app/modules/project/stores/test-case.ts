@@ -11,7 +11,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import { extend, find, includes, isBoolean, map, remove, flatMapDeep } from 'lodash';
+import { extend, find, includes, isBoolean, map, remove, flatMapDeep, set } from 'lodash';
 import { message } from 'nusi';
 import i18n from 'i18n';
 import { createStore } from 'app/cube';
@@ -399,8 +399,7 @@ const testCaseStore = createStore({
       const { attachmentObjects: attachments } = detailCase;
       attachments.map((value: any) => {
         if (!isImage(value.name)) {
-          // eslint-disable-next-line no-param-reassign
-          value.thumbUrl = defaultFileTypeImg;
+          set(value, 'thumbUrl', defaultFileTypeImg);
         }
         extend(value, {
           uid: value.id,

@@ -20,7 +20,7 @@ import {
   importConfigs,
   exportConfigs,
 } from '../services/pipeline-config';
-import { reduce, filter } from 'lodash';
+import { reduce, filter, set } from 'lodash';
 import i18n from 'app/i18n';
 
 interface IState {
@@ -46,13 +46,11 @@ const pipelineConfig = createFlatStore({
       const newConfigs = await call(getConfigs, { appID: appId, payload, apiPrefix });
       const { fullConfigs, unEncryptConfigs, encryptConfigs } = select(s => s);
       const newUnEncryptConfigs = reduce(newConfigs, (result, value, key) => {
-        // eslint-disable-next-line no-param-reassign
-        result[key] = filter(value, { encrypt: false });
+        set(result, key, filter(value, { encrypt: false }));
         return result;
       }, {});
       const newEncryptConfigs = reduce(newConfigs, (result, value, key) => {
-        // eslint-disable-next-line no-param-reassign
-        result[key] = filter(value, { encrypt: true });
+        set(result, key, filter(value, { encrypt: true }));
         return result;
       }, {});
 

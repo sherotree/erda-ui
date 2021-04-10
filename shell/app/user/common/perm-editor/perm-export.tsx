@@ -14,7 +14,7 @@
 import * as React from 'react';
 import { FormModal, MemberSelector } from 'common';
 import { Modal, Tabs, Radio, Button, message } from 'nusi';
-import { map, isEmpty, cloneDeep, intersection, get } from 'lodash';
+import { map, isEmpty, cloneDeep, intersection, get, set } from 'lodash';
 import { changePerm2Yml } from 'user/stores/_perm-state';
 import { createIssue } from 'project/services/issue';
 import IterationSelect from 'project/common/components/issue/iteration-select';
@@ -38,8 +38,7 @@ const checkValidRole = (data:Obj, role:Obj) => {
   const newData = cloneDeep(data);
 
   const check = (_d: Obj) => {
-    // eslint-disable-next-line no-param-reassign
-    if (_d.role)_d.role = intersection(_d.role, roleKeys);
+    if (_d.role) set(_d, 'role', intersection(_d.role, roleKeys));
     map(_d, item => {
       typeof item === 'object' && check(item);
     });

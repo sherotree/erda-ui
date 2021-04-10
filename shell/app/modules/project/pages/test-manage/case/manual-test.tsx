@@ -52,16 +52,15 @@ const ManualTest = () => {
 
   const onSearch = (q: any) => {
     const { timestampSecUpdatedAtBegin, timestampSecUpdatedAtEnd } = q;
+    const currentQ = { ...q };
     if (timestampSecUpdatedAtBegin) {
-      // eslint-disable-next-line no-param-reassign
-      q.timestampSecUpdatedAtBegin = moment(+timestampSecUpdatedAtBegin).startOf('day').format('X');
+      currentQ.timestampSecUpdatedAtBegin = moment(+timestampSecUpdatedAtBegin).startOf('day').format('X');
     }
     if (timestampSecUpdatedAtEnd) {
-      // eslint-disable-next-line no-param-reassign
-      q.timestampSecUpdatedAtEnd = moment(+timestampSecUpdatedAtEnd).endOf('day').format('X');
+      currentQ.timestampSecUpdatedAtEnd = moment(+timestampSecUpdatedAtEnd).endOf('day').format('X');
     }
-    updateSearch(q);
-    getCases(q);
+    updateSearch(currentQ);
+    getCases(currentQ);
     closeEnhanceFilter();
   };
   const debouncedSearch = debounce(onSearch, 500);

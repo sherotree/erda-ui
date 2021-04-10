@@ -903,8 +903,7 @@ const APIBody = (props: any) => {
             headers.push(headerType);
           }
         } else if (exist && action === 'remove') {
-          // eslint-disable-next-line no-param-reassign
-          newData[i].headers = reject(headers, { key: headerType.key });
+          set(newData[i], 'headers', reject(headers, { key: headerType.key }));
         }
       };
       switch (body.type) {
@@ -1018,8 +1017,7 @@ const KeyValEdit = (props: IKeyValProps) => {
           const oldKey = oldVal[idx].key;
           asserts[0].forEach((a: any) => {
             if (a.arg === oldKey) {
-              // eslint-disable-next-line no-param-reassign
-              a.arg = outParams[idx].key;
+              set(a, 'arg', outParams[idx].key);
             }
           });
         }
@@ -1048,8 +1046,7 @@ const KeyValEdit = (props: IKeyValProps) => {
         outParams.forEach((p: any) => { outParamKeys[p.key] = true; });
         // 只保留arg没填或者在outParams有匹配的断言
         const newAsserts = asserts[0].filter((a: any) => a.arg === '' || outParamKeys[a.arg]);
-        // eslint-disable-next-line no-param-reassign
-        newData[i].asserts[0] = newAsserts;
+        set(newData[i], 'asserts.0', newAsserts);
       }
       // 删除断言时同时删除小试中对应断言的结果
       if (k.startsWith('asserts')) {

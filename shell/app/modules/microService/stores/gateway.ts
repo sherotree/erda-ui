@@ -554,26 +554,26 @@ const gatewayStore = createStore({
     async addPolicy({ call, getParams }, payload: {data: GATEWAY.UpdatePolicy, category: string}) {
       const loginUser = userStore.getState(s => s.loginUser);
       const { env, projectId } = getParams();
-      // eslint-disable-next-line no-param-reassign
-      payload.data = {
+      const currentPayload = { ...payload };
+      currentPayload.data = {
         ...payload.data,
         projectId,
         orgId: loginUser.orgId,
         env,
       };
-      await call(gatewayServices.addPolicy, payload, { successMsg: i18n.t('add successfully') });
+      await call(gatewayServices.addPolicy, currentPayload, { successMsg: i18n.t('add successfully') });
       gatewayStore.effects.getPolicyList({ category: 'trafficControl' });
     },
     async updatePolicy({ call, getParams }, payload:{data: GATEWAY.UpdatePolicy, category: string}) {
       const loginUser = userStore.getState(s => s.loginUser);
       const { env } = getParams();
-      // eslint-disable-next-line no-param-reassign
-      payload.data = {
+      const currentPayload = { ...payload };
+      currentPayload.data = {
         ...payload.data,
         orgId: loginUser.orgId,
         env,
       };
-      const newData = await call(gatewayServices.updatePolicy, payload, { successMsg: i18n.t('update successfully') });
+      const newData = await call(gatewayServices.updatePolicy, currentPayload, { successMsg: i18n.t('update successfully') });
       gatewayStore.reducers.updateTrafficControlPolicySuccess(newData);
     },
     async deletePolicy({ call }, payload: {data: {policyId: string}, category: string}) {

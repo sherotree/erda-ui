@@ -14,7 +14,7 @@
 import * as React from 'react';
 import { Button, Select, Tabs, message, Spin, Dropdown, Menu, Divider } from 'nusi';
 import { IssueIcon, getIssueTypeOption } from 'project/common/components/issue/issue-icon';
-import { map, has, cloneDeep, includes, isEmpty, merge, find } from 'lodash';
+import { map, has, cloneDeep, includes, isEmpty, merge, find, set } from 'lodash';
 import moment from 'moment';
 import {
   EditField,
@@ -770,14 +770,11 @@ export const EditIssueDrawer = (props: IProps) => {
         if (draftData.propertyName === customFieldKey) {
           if (FIELD_WITH_OPTION[draftData?.propertyType]) {
             const _values = customFieldValue || [];
-            // eslint-disable-next-line no-param-reassign
-            draftData.values = Array.isArray(_values) ? _values : [_values];
+            set(draftData, 'values', Array.isArray(_values) ? _values : [_values]);
           } else if (draftData?.propertyType === 'Number') {
-            // eslint-disable-next-line no-param-reassign
-            draftData.arbitraryValue = Number(customFieldValue);
+            set(draftData, 'arbitraryValue', Number(customFieldValue));
           } else {
-            // eslint-disable-next-line no-param-reassign
-            draftData.arbitraryValue = customFieldValue;
+            set(draftData, 'arbitraryValue', customFieldValue);
           }
         }
       });

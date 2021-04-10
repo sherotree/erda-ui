@@ -102,8 +102,7 @@ export default abstract class Component<State, Props> extends Container<State, P
     const { name } = config;
     const value = get(this.state, ['values', ...stringToPath(name)]);
     if (value !== undefined) {
-      // eslint-disable-next-line no-param-reassign
-      config.initialValue = value;
+      set(config, 'initialValue', value);
     }
 
     return config;
@@ -114,8 +113,7 @@ export default abstract class Component<State, Props> extends Container<State, P
     const path = `values.${name}`;
     const dataSource = get(this.state, path);
     if (dataSource) {
-      // eslint-disable-next-line no-param-reassign
-      config.dataSource = dataSource;
+      set(config, 'dataSource', dataSource);
     }
 
     return config;
@@ -125,8 +123,7 @@ export default abstract class Component<State, Props> extends Container<State, P
     const { name } = config;
     const tableKey = this.getTableKey(name);
     const dataSource = get(this.state, ['values', ...stringToPath(tableKey)]) || [];
-    // eslint-disable-next-line no-param-reassign
-    config.dataSource = dataSource;
+    set(config, 'dataSource', dataSource);
 
     return config;
   }

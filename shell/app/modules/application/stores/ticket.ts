@@ -24,7 +24,7 @@ import {
   createComment,
 } from '../services/ticket';
 import i18n from 'i18n';
-import { map } from 'lodash';
+import { map, set } from 'lodash';
 import userStore from 'app/user/stores';
 
 const getUser = (user: ILoginUser) => (user ? (user.nick || user.name || user.email || user.phone || user.id) : i18n.t('application:system'));
@@ -93,8 +93,7 @@ const ticketStore = createStore({
 
       list.forEach((comment) => {
         if (userMap[comment.userID]) {
-          // eslint-disable-next-line no-param-reassign
-          comment.author = getUser(userMap[comment.userID]);
+          set(comment, 'author', getUser(userMap[comment.userID]));
         }
       });
       update({ comments: list, commentsTotal: total });

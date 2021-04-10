@@ -16,7 +16,7 @@ import * as React from 'react';
 import { Form, Button, Input, InputNumber, Icon, Collapse, Alert, Spin, Select, Tooltip } from 'nusi';
 import { FormComponentProps } from 'antd/es/form';
 import i18n from 'i18n';
-import { cloneDeep, map, isEmpty, omit, pick, get, filter, head, transform, isEqual, forEach, find, flatten } from 'lodash';
+import { cloneDeep, map, isEmpty, omit, pick, get, set, filter, head, transform, isEqual, forEach, find, flatten } from 'lodash';
 import VariableInput from 'application/common/components/object-input-group';
 import ListInput from 'application/common/components/list-input-group';
 import { useUpdate, IF, Icon as CustomIcon } from 'common';
@@ -415,8 +415,7 @@ const PurePipelineNodeForm = (props: IEditStageProps & FormComponentProps) => {
 
   const deleteItemFromStructArray = (property: any, index: number, parentKey: string) => {
     if (!property.value) {
-      // eslint-disable-next-line no-param-reassign
-      property.value = [];
+      set(property, 'value', []);
     }
     property.value.splice(index, 1);
     updater.resource(cloneDeep(resource));
@@ -431,8 +430,7 @@ const PurePipelineNodeForm = (props: IEditStageProps & FormComponentProps) => {
 
   const addNewItemToStructArray = (property: any, struct: any) => {
     if (!property.value) {
-      // eslint-disable-next-line no-param-reassign
-      property.value = [];
+      set(property, 'value', []);
     }
     property.value.push({
       [struct.name]: `module-${property.value.length + 1}`,
@@ -451,8 +449,7 @@ const PurePipelineNodeForm = (props: IEditStageProps & FormComponentProps) => {
         const resources = head(filter(resource.data, (item) => item.name === 'resources'));
         const originResource = transform(get(resources, 'struct'), (result, item: { name: string, default: string | number }) => {
           const { name, default: d } = item;
-          // eslint-disable-next-line no-param-reassign
-          result[name] = +d;
+          set(result, name, +d);
         }, {});
         const editedResources = get(data, 'resource.resources') || {};
         forEach(Object.entries(editedResources), ([key, value]) => { editedResources[key] = +(value as string); });

@@ -12,7 +12,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import * as React from 'react';
-import { reduce, map, keys, isEqual, isEmpty, get, find } from 'lodash';
+import { reduce, map, keys, isEqual, isEmpty, get, find, set } from 'lodash';
 import { PagingTable, IF, DeleteConfirm, connectCube } from 'common';
 import { notify, goTo, qs } from 'common/utils';
 import { Select, Button, Input, Modal } from 'nusi';
@@ -75,8 +75,7 @@ interface IState {
 
 const extractServiceList = ({ services }: any) => {
   return reduce(services, (result, value, key) => {
-    // eslint-disable-next-line no-param-reassign
-    result[key] = value.addrs[0] || '';
+    set(result, key, value.addrs[0] || '');
     return result;
   }, {});
 };
