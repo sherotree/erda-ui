@@ -23,15 +23,15 @@ import { IData } from './yml-chart';
 
 interface IChartConfig extends Omit<typeof CHART_CONFIG, 'MARGIN'> {
   NODE: {
-    [pro: string]: {WIDTH: number; HEIGHT: number}
+    [pro: string]: { WIDTH: number; HEIGHT: number }
   },
-  MARGIN: {X: number; Y: number};
+  MARGIN: { X: number; Y: number };
 }
 
 interface IExternal {
   [pro: string]: any;
   nodeEleMap?: {
-    [pro:string]: React.ReactNode
+    [pro: string]: React.ReactNode
   };
   editing: boolean;
 }
@@ -195,7 +195,7 @@ const renderNodes = (nodeData: any[][], chart: any, chartConfig: IChartConfig, e
   });
 };
 
-const getLinkPosition = (data: IExternalData [][], chartConfig: IChartConfig, external: any = {}) => {
+const getLinkPosition = (data: IExternalData[][], chartConfig: IChartConfig, external: any = {}) => {
   const { chartId } = external;
   const linkData = [] as any[];
   const { LINK } = chartConfig;
@@ -206,7 +206,7 @@ const getLinkPosition = (data: IExternalData [][], chartConfig: IChartConfig, ex
         if (targetNodes) {
           const firstTarget = get(targetNodes, `[0].${externalKey}`);
           const lastTarget = get(targetNodes, `[${targetNodes.length - 1}].${externalKey}`);
-          const centerX = firstTarget.x + (lastTarget.x - firstTarget.x) / 2;
+          const centerX = get(firstTarget, 'x', 0) + (get(lastTarget, 'x', 0) - get(firstTarget, 'x', 0)) / 2;
           map(targetNodes, targetNode => {
             const startPos = subItem[externalKey];
             const endPos = targetNode[externalKey];
@@ -303,7 +303,7 @@ const getLinkPosition = (data: IExternalData [][], chartConfig: IChartConfig, ex
   };
 };
 // 渲染link
-const renderLinks = (linkData: any[], chart: any, chartConfig: IChartConfig, external:any) => {
+const renderLinks = (linkData: any[], chart: any, chartConfig: IChartConfig, external: any) => {
   const { LINK } = chartConfig;
   const { startMarker, endMarker } = LINK;
   const markerStart = chart.circle(...startMarker.pos).attr(startMarker.attr).marker(...startMarker.marker);

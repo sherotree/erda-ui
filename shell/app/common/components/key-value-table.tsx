@@ -167,13 +167,13 @@ export class KeyValueTable extends React.Component<IProps, IState> {
     return as ? { ...otherData, [as]: { ...tbData } } : { ...otherData, ...tbData };
   }
 
-  static getDerivedStateFromProps(nextProps: IProps, preState: IState): Partial<IState> | null{
-    if (!isEqual(convertToColumnData(nextProps.data), preState.dataSource)) {
-      return {
-        dataSource: convertToColumnData(nextProps.data),
-      };
+  componentWillReceiveProps({ data }: IProps) {
+    // 不要判断非空，有时需要清空数据
+    if (!isEqual(data, this.props.data)) {
+      this.setState({
+        dataSource: convertToColumnData(data),
+      });
     }
-    return null;
   }
 
   getTableData() {
@@ -196,7 +196,7 @@ export class KeyValueTable extends React.Component<IProps, IState> {
     validateFields((err) => {
       // 分页非第一页时，判断下第一个值不为空后添加新行
       if (!err) {
-        const canAdd = (dataSource.length === 0) ||
+        const canAdd = (dataSource?.length === 0) ||
                         (dataSource[0][ROW_KEY] && dataSource[0][ROW_VALUE]);
         if (canAdd) {
           const newData = { [ROW_KEY]: '', [ROW_VALUE]: '', uniKey: uniqueId() };
@@ -231,7 +231,7 @@ export class KeyValueTable extends React.Component<IProps, IState> {
       form, title = '', pagination = { pageSize: 5, hideOnSinglePage: true }, size = 'small', className = '', addBtnText = i18n.t('common:add'),
       disableAdd = false, disableDelete = false, editDisabled, existKeys = [], keyDisabled = false, isTextArea, validate, maxLength,
     } = this.props;
-    const showPagination = dataSource.length >= pagination.pageSize;
+    const showPagination = dataSource?.length >= pagination.pageSize;
 
     const deleteBtnClass = classNames({
       'delete-row-btn': true,

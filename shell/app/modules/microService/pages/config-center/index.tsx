@@ -241,7 +241,7 @@ const ConfigCenter = () => {
   const addConfig = (configs: IConfig[]) => {
     const newConfig = map(configs, ({ key, value }) => ({ key, value, source: 'DICE' }));
     const curConfig = configListMap[chosenApp];
-    saveCurConfig([...newConfig, ...curConfig]);
+    saveCurConfig([...(newConfig || []), ...(curConfig || [])]);
   };
   return (
     <div className="micro-config-center">
