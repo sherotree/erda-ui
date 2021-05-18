@@ -25,7 +25,7 @@ import ImportFile from 'project/pages/issue/component/import-file';
 import issueFieldStore from 'org/stores/issue-field';
 import { useMount } from 'react-use';
 
-interface IProps{
+interface IProps {
   issueType: ISSUE_TYPE
 }
 
@@ -49,8 +49,11 @@ export default ({ issueType }: IProps) => {
     viewType: '',
     viewGroup: '',
   });
-  const { getFieldsByIssue: getCustomFieldsByProject } = issueFieldStore.effects;
+  const { getFieldsByIssue: getCustomFieldsByProject, getSpecialFieldOptions } = issueFieldStore.effects;
+
   useMount(() => {
+    getSpecialFieldOptions({ orgID, issueType: 'BUG' });
+    getSpecialFieldOptions({ orgID, issueType: 'TASK' });
     getCustomFieldsByProject({
       propertyIssueType: issueType,
       orgID,
@@ -109,7 +112,7 @@ export default ({ issueType }: IProps) => {
     }
   };
 
-  const onCreate = (val:any) => {
+  const onCreate = (val: any) => {
     const filterIterationIDs = filterObj?.iterationIDs || [];
     const createTypeMap = {
       createRequirement: ISSUE_TYPE.REQUIREMENT,
@@ -172,7 +175,7 @@ export default ({ issueType }: IProps) => {
               updater.urlQuery((prev: Obj) => ({ ...prev, ...getUrlQuery(val) }));
               updater.pageNo(val?.pageNo || 1);
             },
-            clickTableItem: (_data:ISSUE.Issue) => {
+            clickTableItem: (_data: ISSUE.Issue) => {
               onChosenIssue(_data);
             },
           },
@@ -1161,10 +1164,12 @@ const issueGantt = {
             { text: '任务C', id: '3', type: 'REQUIREMENT', iterationID: 2 },
           ],
         },
-        dateRange: { renderType: 'gantt',
+        dateRange: {
+          renderType: 'gantt',
           value: [
             { tooltip: '任务A', restTime: 5, offset: 0, delay: 0, actualTime: 13 },
-          ] },
+          ],
+        },
       },
       {
         id: 2,
@@ -1175,17 +1180,19 @@ const issueGantt = {
           name: '端点',
           nick: '端点',
         },
-        issues: { renderType: 'string-list',
+        issues: {
+          renderType: 'string-list',
           value: [
             { text: '接口测试计划中引入测试用例，测试用例比较多的时候一个个的引入效率太低', id: '1', type: 'TASK', iterationID: 2, linkStyle: true },
-          ] },
+          ],
+        },
         dateRange:
-          {
-            renderType: 'gantt',
-            value: [
-              { tooltip: '接口测试计划中引入测试用例，测试用例比较多的时候一个个的引入效率太低', restTime: 0, offset: 1, delay: 1, actualTime: 5 },
-            ],
-          },
+        {
+          renderType: 'gantt',
+          value: [
+            { tooltip: '接口测试计划中引入测试用例，测试用例比较多的时候一个个的引入效率太低', restTime: 0, offset: 1, delay: 1, actualTime: 5 },
+          ],
+        },
         deadline: {
           renderType: 'datePicker',
           value: '2021-01-31T00:00:00+08:00',
@@ -1221,7 +1228,8 @@ const issueGantt = {
           '#red#红色#>red#：代表截止到目前的超时时间段',
         ],
       },
-      { title: '甘特图',
+      {
+        title: '甘特图',
         dataIndex: 'dateRange',
         titleRenderType: 'gantt',
         width: 800,
@@ -1234,7 +1242,8 @@ const issueGantt = {
             month: 1,
             date: ['1', '2', 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
           },
-        ] },
+        ],
+      },
     ],
   },
 };
