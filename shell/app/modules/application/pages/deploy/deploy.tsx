@@ -212,6 +212,7 @@ const Deploy = () => {
   const { getRunTimes, redeployRuntime, deleteRuntime } = appDeployStore.effects;
   const { clearDeploy } = appDeployStore.reducers;
   const timer = React.useRef();
+  const { appId } = routeInfoStore.getState(s => s.params);
 
   const [{ curEnv, isUpdate, curBranch }, updater, update] = useUpdate({
     curEnv: '',
@@ -220,7 +221,7 @@ const Deploy = () => {
   });
 
   useEffectOnce(() => {
-    getRunTimes();
+    getRunTimes(appId);
     return () => clearDeploy();
   });
 
@@ -230,7 +231,7 @@ const Deploy = () => {
     clearInterval(timer.current);
     if (hasDeleting) {
       timer.current = setInterval(() => {
-        getRunTimes();
+        getRunTimes(appId);
       }, 1000 * 10) as any;
     }
     return () => {
@@ -261,7 +262,7 @@ const Deploy = () => {
       confs: group.PROD || [],
     },
   };
-  const handleQuickCreate = (v:string, isBlock: boolean) => {
+  const handleQuickCreate = (v: string, isBlock: boolean) => {
     if (isBlock) {
       return;
     }

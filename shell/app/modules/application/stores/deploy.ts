@@ -85,8 +85,7 @@ const deploy = createStore({
     });
   },
   effects: {
-    async getRunTimes({ call, getParams, update, select }) {
-      const { appId } = getParams();
+    async getRunTimes({ call, update, select }, appId: string) {
       const oldRuntimes = select(s => s.runtimes);
       if (appId) {
         const runtimes = await call(getRunTimes, appId);
@@ -119,20 +118,20 @@ const deploy = createStore({
       return actionConfigs;
     },
     async redeployRuntime({ call, getParams }, id?: string) {
-      const { runtimeId } = getParams();
+      const { runtimeId, appId } = getParams();
       await call(redeployRuntime, id || runtimeId, { successMsg: i18n.t('runtime:start redeploying the runtime') });
-      deploy.effects.getRunTimes();
+      deploy.effects.getRunTimes(appId);
       deploy.reducers.clearServiceConfig(runtimeId);
     },
     async deleteRuntime({ call, getParams }, id?: string) {
-      const { runtimeId } = getParams();
+      const { runtimeId, appId } = getParams();
       await call(deleteRuntime, id || runtimeId, { successMsg: i18n.t('runtime:start deleting runtime') });
-      deploy.effects.getRunTimes();
+      deploy.effects.getRunTimes(appId);
     },
     async addRuntimeByRelease({ call, getParams }, payload: DEPLOY.AddByRelease) {
       const { projectId, appId } = getParams();
       await call(addRuntimeByRelease, { ...payload, projectId: +projectId, applicationId: +appId }, { successMsg: i18n.t('add successfully') });
-      deploy.effects.getRunTimes();
+      deploy.effects.getRunTimes(appId);
     },
     async getReleaseByWorkspace({ call, getParams }, payload: { workspace: string }) {
       const { appId } = getParams();
