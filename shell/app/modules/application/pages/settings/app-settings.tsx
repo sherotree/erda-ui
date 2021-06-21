@@ -17,7 +17,7 @@ import { SettingsTabs, ConfigLayout, MembersTable } from 'common';
 import { AppInfo } from './components/app-info';
 import { MergeDes } from './components/app-merge-description';
 import NotifyGroup from './components/app-notify/common-notify-group';
-import NotifyConfig from './components/app-notify/notify-config';
+import NotifyConfigProtocol from './components/app-notify/notify-config-protocol';
 import { MobileConfig, PipelineConfig, DeployConfig } from './components/app-variable-config';
 import VersionPushConfig from './components/app-version-push';
 import LibraryImport from './components/app-library-reference';
@@ -182,21 +182,7 @@ export const PureAppSettings = () => {
         {
           tabTitle: i18n.t('application:notification'),
           tabKey: 'notifyConfig',
-          content: (
-            <ConfigLayout
-              sectionList={[
-                {
-                  title: i18n.t('application:help you better organize your notifications'),
-                  children: (
-                    <NotifyConfig
-                      memberStore={memberStore}
-                      commonPayload={{ scopeType: 'app', scopeId: params.appId, module: 'workbench' }}
-                    />
-                  ),
-                },
-              ]}
-            />
-          ),
+          content: <NotifyConfigProtocol scopeType='app'/>
         },
         {
           tabTitle: i18n.t('application:notification group'),

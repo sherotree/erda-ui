@@ -17,7 +17,7 @@ import { goTo } from 'common/utils';
 import ProjectInfo from './project-info';
 import ProjectCluster from './project-cluster';
 import ProjectLabel from './project-label';
-import NotifyConfig from 'application/pages/settings/components/app-notify/notify-config';
+import NotifyConfigProtocol from 'application/pages/settings/components/app-notify/notify-config-protocol';
 import NotifyGroup from 'application/pages/settings/components/app-notify/common-notify-group';
 import memberStore from 'common/stores/project-member';
 import i18n from 'i18n';
@@ -170,21 +170,7 @@ const ProjectSettings = () => {
         {
           tabTitle: i18n.t('application:notification'),
           tabKey: 'notifyConfig',
-          content: (
-            <ConfigLayout
-              sectionList={[
-                {
-                  title: i18n.t('application:help you better organize your notifications'),
-                  children: (
-                    <NotifyConfig
-                      memberStore={memberStore}
-                      commonPayload={{ scopeType: 'project', scopeId: projectId, module: 'workbench' }}
-                    />
-                  ),
-                },
-              ]}
-            />
-          ),
+          content: <NotifyConfigProtocol scopeType='project'/>
         },
         {
           tabTitle: i18n.t('application:notification group'),

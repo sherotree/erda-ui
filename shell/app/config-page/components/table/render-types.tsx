@@ -15,6 +15,7 @@ import * as React from 'react';
 import { Popconfirm, Tooltip, Dropdown, Menu, Progress, Ellipsis, Badge } from 'app/nusi';
 import { map, isEmpty, get, isArray, sortBy, filter } from 'lodash';
 import { Icon as CustomIcon, MemberSelector, ImgHolder, TagsColumn, Copy } from 'common';
+import { ListTargets } from 'application/pages/settings/components/app-notify/common-notify-group';
 import i18n from 'i18n';
 import moment from 'moment';
 import { WithAuth } from 'user/common';
@@ -289,6 +290,15 @@ export const getRender = (val: any, record: CP_TABLE.RowData, extra: any) => {
         Comp = <Text type="Text" props={textProps} />;
       }
       break;
+      case 'listTargets': {
+        const { value, roleMap } = val;
+        Comp = (
+          <div className='notify-info flex-box'>
+            <ListTargets targets={value} roleMap={roleMap} />
+          </div>
+        );
+        break;
+      }
     default:
       Comp = <Ellipsis title={`${val}`}>{`${val}`}</Ellipsis>;
       break;
