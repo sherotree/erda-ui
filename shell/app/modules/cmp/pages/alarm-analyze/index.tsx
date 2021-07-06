@@ -62,9 +62,9 @@ const AlarmAnalyze = () => {
       <div className="org-cluster-filter">
         <ClusterSelector clusterList={orgClusterList} onChange={changeCluster} />
       </div>
-      <Row>
+      <div>
         <Row>
-          <Col>
+          <Col span={24}>
             <AlarmTrendChart
               query={{
                 constQuery: daysRange(7),
@@ -97,7 +97,7 @@ const AlarmAnalyze = () => {
             />
           </Col>
         </Row>
-      </Row>
+      </div>
       {/* <div className="alarm-message">
         <p className="section-title">{i18n.t('org:alarm information')}</p>
         <Select
