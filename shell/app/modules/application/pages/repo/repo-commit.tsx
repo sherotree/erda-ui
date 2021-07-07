@@ -74,7 +74,7 @@ const RepoCommit = () => {
   const [isFetching] = useLoading(repoStore, ['getCommitList']);
   const [searchValue, setSearchValue] = React.useState('');
   React.useEffect(() => {
-    !isEmpty(info) && getCommitList();
+    !isEmpty(info?.branches) && getCommitList();
   }, [getCommitList, info]);
   React.useEffect(() => {
     return () => {
