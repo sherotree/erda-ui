@@ -24,10 +24,14 @@ import { useLoading } from 'core/stores/loading';
 import { isEmpty } from 'lodash';
 import { useUnmount, useMount } from 'react-use';
 import { TimeSelectWithStore } from 'msp/components/time-select';
+import { ServiceNameSelect } from './service-name-select';
+import serviceAnalyticsStore from 'msp/stores/service-analytics';
 
 export default () => {
   const params = routeInfoStore.useStore((s) => s.params);
-  const timeSpan = monitorCommonStore.useStore((s) => s.timeSpan);
+  const globalTimeSelectSpan = monitorCommonStore.useStore((s) => s.globalTimeSelectSpan);
+  const serviceId = serviceAnalyticsStore.useStore((s) => s.serviceId);
+  const { range } = globalTimeSelectSpan;
   const [isFetching] = useLoading(topologyStore, ['getMonitorTopology']);
   const [useData, setUseData] = React.useState({});
   const [sourceData, scale] = topologyStore.useStore((s) => [
@@ -40,33 +44,30 @@ export default () => {
   const { clearMonitorTopology, setScale } = topologyStore.reducers;
   const { getMonitorTopology } = topologyStore.effects;
 
-  useMount(() => {
-    setScale(0.8);
-  });
+  const getData = React.useCallback(() => {
+    const { startTimeMs, endTimeMs } = range || {};
+    const query = {
+      startTime: startTimeMs,
+      endTime: endTimeMs,
+      terminusKey: params.terminusKey,
+      tags: [`service:${serviceId}`],
+    };
+    getMonitorTopology(query);
+  }, [getMonitorTopology, params.terminusKey, range, serviceId]);
 
   useUnmount(() => {
+    setScale(0.8);
     clearMonitorTopology();
   });
 
   React.useEffect(() => {
-    const getData = () => {
-      const { startTimeMs, endTimeMs } = timeSpan;
-      const query = {
-        startTime: startTimeMs,
-        endTime: endTimeMs,
-        terminusKey: params.terminusKey,
-        tags: [`service:${params.serviceName}`],
-      };
-      getMonitorTopology(query);
-    };
-
     if (params.terminusKey) {
       getData();
     }
-  }, [timeSpan, params.terminusKey, getMonitorTopology, params.serviceName]);
+  }, [params.terminusKey, getData]);
 
   React.useEffect(() => {
-    if (!isEmpty(topologyData)) {
+    if (JSON.stringify(topologyData) === '{}') {
       setUseData(topologyData);
     } else {
       setUseData({ nodes: [] });
@@ -79,14 +80,15 @@ export default () => {
 
   const nodeExternalParam = {
     terminusKey: params.terminusKey,
-    timeSpan,
+    range,
     linkTextHoverAction,
     originData: useData,
   };
 
   return (
     <div className="service-analyze flex flex-col h-full">
-      <div className="flex justify-end items-center mb-3">
+      <div className="flex justify-between items-center mb-3">
+        <ServiceNameSelect />
         <TimeSelectWithStore className="m-0" />
       </div>
       <div className="overflow-auto flex-1">

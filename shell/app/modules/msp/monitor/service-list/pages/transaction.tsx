@@ -25,6 +25,7 @@ import TraceSearchDetail from 'msp/monitor/trace-insight/pages/trace-querier/tra
 import ServiceListDashboard from './service-list-dashboard';
 import { RadioChangeEvent } from 'core/common/interface';
 import { TimeSelectWithStore } from 'msp/components/time-select';
+import { ServiceNameSelect } from './service-name-select';
 
 const { Button: RadioButton, Group: RadioGroup } = Radio;
 enum DASHBOARD_TYPE {
@@ -192,6 +193,7 @@ const Transaction = () => {
       <div>
         <div className="flex justify-between items-center flex-wrap mb-1">
           <div className="left flex justify-between items-center mb-2">
+            <ServiceNameSelect />
             <If condition={type === DASHBOARD_TYPE.http || type === DASHBOARD_TYPE.rpc}>
               <Select
                 className="ml-3"

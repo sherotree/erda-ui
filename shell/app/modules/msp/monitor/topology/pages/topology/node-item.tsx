@@ -254,7 +254,7 @@ const NodeEle = ({ node, onHover, outHover, onClick, timeSpan, terminusKey, node
         <Tooltip title={ServiceTipText}>
           <div
             className={'topology-node'}
-            onClick={isServiceList ? () => {} : onClick}
+            onClick={isServiceList ? undefined : onClick}
             style={style}
             onMouseEnter={() => setHoverFlag(true)}
             onMouseLeave={() => setHoverFlag(false)}

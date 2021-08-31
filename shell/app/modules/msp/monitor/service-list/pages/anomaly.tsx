@@ -20,6 +20,7 @@ import monitorCommonStore from 'common/stores/monitorCommon';
 import topologyServiceStore from 'msp/stores/topology-service-analyze';
 import ServiceListDashboard from './service-list-dashboard';
 import { TimeSelectWithStore } from 'msp/components/time-select';
+import { ServiceNameSelect } from './service-name-select';
 
 const sortList = [
   {
@@ -59,6 +60,7 @@ export default () => {
     <div className="service-analyze flex flex-col h-full">
       <div className="flex justify-between items-center flex-wrap mb-1">
         <div className="left flex justify-between items-center mb-2">
+          <ServiceNameSelect />
           <Select
             className="mr-3"
             placeholder={i18n.t('msp:select sorting method')}

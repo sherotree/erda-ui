@@ -51,3 +51,10 @@ export const getInstanceIds = (
     .query(query)
     .then((response: any) => response.body);
 };
+
+export const getServiceList = (payload: any) => {
+  return agent
+    .get('/api/apm/topology/services')
+    .query(payload)
+    .then((response: any) => response.body);
+};
