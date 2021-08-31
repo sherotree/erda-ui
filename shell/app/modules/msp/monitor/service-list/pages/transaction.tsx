@@ -32,6 +32,7 @@ enum DASHBOARD_TYPE {
   rpc = 'rpc',
   cache = 'cache',
   database = 'database',
+  mq = 'mq',
 }
 
 const defaultSort: TOPOLOGY_SERVICE_ANALYZE.SORT_TYPE = 'timestamp:DESC';
@@ -59,6 +60,10 @@ const dashboardIdMap = {
   [DASHBOARD_TYPE.database]: {
     id: 'translation_analysis_database',
     name: i18n.t('msp:Database call'),
+  },
+  [DASHBOARD_TYPE.mq]: {
+    id: 'translation_analysis_mq',
+    name: 'MQ 调用',
   },
 };
 const sortList = [
