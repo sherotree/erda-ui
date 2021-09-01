@@ -267,13 +267,7 @@ export default () => {
         <PureBoardGrid layout={layout} />
       </div>
       <Table loading={loading} rowKey="id" columns={columns} dataSource={traceSummary} scroll={{ x: 1100 }} />
-      <Drawer
-        title={i18n.t('msp:link information')}
-        visible={detailVisible}
-        onClose={closeDetail}
-        width="50%"
-        destroyOnClose
-      >
+      <Drawer title={88888} visible={detailVisible} onClose={closeDetail} width="80%" destroyOnClose>
         <TraceSearchDetail traceId={traceId} />
       </Drawer>
     </>

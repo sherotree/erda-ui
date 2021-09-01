@@ -15,6 +15,7 @@ import fp from 'lodash/fp';
 import { mkDurationStr } from './traceSummary';
 import { findIndex, flatMap, groupBy, Dictionary } from 'lodash';
 import { ConstantNames, Constants } from 'trace-insight/common/utils/traceConstants';
+import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript';
 
 interface timeMarkers {
   index: number;
@@ -29,7 +30,7 @@ interface Trace {
   totalSpans: number;
   timeMarkers: timeMarkers[];
   timeMarkersBackup: timeMarkers[];
-  spans: Array<MONITOR_TRACE.ISpan>;
+  spans: MONITOR_TRACE.ISpan[];
 }
 
 interface Entry {
@@ -52,6 +53,8 @@ const getRootMostSpan = (traces: MONITOR_TRACE.ITraceSpan[]) => {
   if (firstWithoutParent) {
     return firstWithoutParent;
   }
+
+  // 是不是没有根节点的时候，有几个独立分开节点的处理
   const idToSpanMap = fp.flow(
     fp.groupBy((s: MONITOR_TRACE.ITraceSpan) => s.id),
     fp.mapValues(([s]) => s),
@@ -79,10 +82,12 @@ const createSpanTreeEntry = (
 
 const treeDepths = (entry: Entry, startDepth: number): Obj<number> => {
   const initial = {};
+  // 根节点深度为1
   initial[entry.span.id] = startDepth;
   if (entry.children.length === 0) {
     return initial;
   }
+  // 每后一级的孩子多深度加1
   return (entry.children || []).reduce((prevMap, child) => {
     const childDepths = treeDepths(child, startDepth + 1);
     const newCombined = {
@@ -94,8 +99,11 @@ const treeDepths = (entry: Entry, startDepth: number): Obj<number> => {
 };
 
 const toSpanDepths = (traces: MONITOR_TRACE.ITraceSpan[]) => {
+  // 找根节点
   const root = getRootMostSpan(traces);
+  // 创建树结构，把每个子节点创建 ？entry 应该是以根节点作为初始节点，返回其子节点和本节点信息
   const entry = createSpanTreeEntry(root, traces);
+  console.log({ traces, root, entry }, treeDepths(entry, 1));
   return treeDepths(entry, 1);
 };
 
@@ -126,7 +134,7 @@ const compareSpan = (s1: MONITOR_TRACE.ITraceSpan, s2: MONITOR_TRACE.ITraceSpan)
 
 const childrenToList = (entry: Entry) => {
   const fpSort = (fn: ((a: Entry, b: Entry) => number) | undefined) => (list: Entry[]) => list.sort(fn);
-  const deepChildren: Entry['span'][] = fp.flow(
+  const deepChildren: Array<Entry['span']> = fp.flow(
     fpSort((e1: Entry, e2: Entry) => compareSpan(e1.span, e2.span)),
     fp.flatMap(childrenToList),
   )(entry.children || []);
@@ -141,6 +149,7 @@ const traceConvert = (traces: MONITOR_TRACE.ITrace): Trace => {
   const summary = traceSummary(oldSpans);
   const duration = durationNs / 1000;
   const spanDepths = toSpanDepths(oldSpans);
+  console.log({ spanDepths }, 3344);
   const groupByParentId = groupBy(oldSpans, (s) => s.parentSpanId);
   let traceTimestamp = 0;
 

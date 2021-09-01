@@ -32,11 +32,14 @@ export default ({ traceId }: { traceId?: string }) => {
   }, [getTraceDetailContent, traceId, updater]);
 
   return (
-    <PureTraceDetail
-      spanDetailContent={spanDetailContent}
-      traceDetailContent={traceRecords}
-      isTraceDetailContentFetching={loading}
-      getSpanDetailContent={getSpanDetailContent}
-    />
+    <>
+      3344
+      <PureTraceDetail
+        spanDetailContent={spanDetailContent}
+        traceDetailContent={traceRecords}
+        isTraceDetailContentFetching={loading}
+        getSpanDetailContent={getSpanDetailContent}
+      />
+    </>
   );
 };

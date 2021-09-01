@@ -138,7 +138,6 @@ class TraceDetail extends React.Component<IProps, IState> {
   roundTimeString = (timeString: string, n: number) => {
     const floatReg = /(^(-|\+)?\d+(\.\d+)?)/g;
     const roundNum = (timeString.match(floatReg) || []).pop() as any;
-
     return replace(timeString, floatReg, `${round(roundNum, n)}`);
   };
 
@@ -146,8 +145,10 @@ class TraceDetail extends React.Component<IProps, IState> {
     const { isTraceDetailContentFetching, traceDetailContent } = this.props;
     return (
       <div className="trace-detail-container">
+        {/* 头部 duration/services/depth/totalspans 包括展开收起 */}
         <TraceDetailFilter {...this.props} expandSpan={this.expandSpan} />
         <div className="trace-items-cont">
+          {/*  展示瀑布流的头部， Services 和 时间段 */}
           <div id="timeLabel" className="span">
             <div className="handle">Services</div>
             <div className="duration-container">
@@ -196,7 +197,9 @@ class TraceDetail extends React.Component<IProps, IState> {
                   data-children={children}
                   data-error-type={errorType}
                 >
+                  {/* 左边深色，服务名， */}
                   <div className="handle" onClick={() => this.expandSpan({ spanId, children, isExpand })}>
+                    {/* 服务名，可展开缩起 */}
                     <div className="service-name" style={{ marginLeft: `${depth}px` }}>
                       {children ? <span className="expander">{isExpand ? '-' : '+'}</span> : ''}
                       <Tooltip title={tags.service_name}>
@@ -259,6 +262,7 @@ class TraceDetail extends React.Component<IProps, IState> {
             })}
           </Spin>
         </div>
+        4848
         <SpanDetail {...this.props} />
       </div>
     );
