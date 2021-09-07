@@ -359,8 +359,8 @@ const Transaction = () => {
         />
       </div>
       <Drawer
-        title={`${i18n.t('msp:tracking details')}(${url})`}
-        width="55%"
+        title={`${i18n.t('msp:link information')}(${url})`}
+        width="80%"
         visible={visible}
         onClose={() => updater.visible(false)}
       >
@@ -392,17 +392,17 @@ const Transaction = () => {
         <Drawer
           destroyOnClose
           title={i18n.t('runtime:monitor log')}
-          width="50%"
+          width="80%"
           visible={logVisible}
           onClose={() => updater.logVisible(false)}
         >
           <SimpleLog requestId={traceId} applicationId={params?.applicationId} />
         </Drawer>
         <Drawer
-          title={i18n.t('msp:link information')}
+          title={'000'}
           visible={detailVisible}
           onClose={() => updater.detailVisible(false)}
-          width="50%"
+          width="80%"
           destroyOnClose
         >
           <TraceSearchDetail traceId={traceId} />

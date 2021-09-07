@@ -12,7 +12,8 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import React from 'react';
-import PureTraceDetail from '../components/trace-detail';
+// import PureTraceDetail from '../components/trace-detail';
+import PureTraceDetail from 'trace-insight/pages/trace-querier/trace-detail-new';
 import traceDetailStore from 'trace-insight/stores/trace-detail';
 import { useLoading } from 'core/stores/loading';
 import routeInfoStore from 'core/stores/route';
