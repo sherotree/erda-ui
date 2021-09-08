@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 import React from 'react';
-import { Tree } from 'core/nusi';
+import { Tree, Tooltip } from 'core/nusi';
 import './trace-graph.scss';
 
 const data = {
@@ -179,12 +179,38 @@ function list_to_tree(arr: any[]) {
 }
 
 const originTreeData = list_to_tree(data.spans);
-
+const spanTimeInfo = (totalSpanTime, selfSpanTime) => (
+  <div className="flex justify-center">
+    <div className="border-0 border-r border-solid border-grey flex flex-col items-center px-6 py-1">
+      <div className="flex justify-center font-semibold ">
+        <span className="text-navy" style={{ fontSize: 16 }}>
+          1990,88
+        </span>
+        <span className="text-navy" style={{ fontSize: 14 }}>
+          ms
+        </span>
+      </div>
+      <div className="text-sm text-darkgray">当前 span 时间</div>
+    </div>
+    <div className="flex flex-col items-center px-6 py-1">
+      <div className="flex justify-center font-semibold">
+        <span className="text-navy" style={{ fontSize: 16 }}>
+          1990,88
+        </span>
+        <span className="text-navy" style={{ fontSize: 14 }}>
+          ms
+        </span>
+      </div>
+      <div className="text-sm text-darkgray">总 span 时间</div>
+    </div>
+  </div>
+);
 export function TraceGraph(props) {
   const { dataSource = [] } = props;
 
   const bg = ['#4E6097', '#498E9E', '#6CB38B', 'purple', '#F7A76B'];
   // const bg = ['red', 'pink', 'green', 'purple', 'blue'];
+
   const { roots, min, max } = list_to_tree(dataSource);
   const duration = max - min;
   function format(item: any, depth = 0) {
@@ -200,13 +226,17 @@ export function TraceGraph(props) {
 
     item.title = (
       <div className="wrapper">
-        <div className="left" style={{ width: 200 - 24 * depth }}>
-          {item?.tags?.service_name}
-        </div>
+        <Tooltip title={item?.tags?.service_name}>
+          <div className="left" style={{ width: 200 - 24 * depth }}>
+            {item?.tags?.service_name}
+          </div>
+        </Tooltip>
         <div className="right">
           {/* TODO:显示毫秒微妙格式化 */}
           <div style={{ flex: f1 }}>{showTextOnLeft && '19'}</div>
-          <div style={{ flex: f2, background: bg[depth % 5] }} />
+          <Tooltip title={spanTimeInfo}>
+            <div style={{ flex: f2, background: bg[depth % 5] }} className="rounded-sm" />
+          </Tooltip>
           <div style={{ flex: f3 }}>{showTextOnRight && '46'}</div>
         </div>
       </div>

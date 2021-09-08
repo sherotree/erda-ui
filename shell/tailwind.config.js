@@ -47,6 +47,7 @@ module.exports = {
         orange: '#f47201',
         purple: '#6a549e',
         cyan: '#5bd6d0ff',
+        navy: '#333333',
         gray: '#666666',
         darkgray: '#999999',
         grey: '#f5f5f5',
