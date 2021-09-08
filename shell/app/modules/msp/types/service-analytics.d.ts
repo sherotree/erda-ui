@@ -14,8 +14,8 @@
 declare namespace SERVICE_ANALYTICS {
   interface IServiceListQuery {
     terminusKey: string;
-    start: string;
-    end: string;
+    start: number;
+    end: number;
   }
 
   interface ServiceItem {

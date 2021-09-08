@@ -25,6 +25,7 @@ import { IMeshType } from '../service-mesh/service-mesh-drawer';
 import routeInfoStore from 'core/stores/route';
 import topologyServiceStore from 'msp/stores/topology-service-analyze';
 import topologyStore from '../../stores/topology';
+import serviceAnalyticsStore from 'msp/stores/service-analytics';
 import i18n from 'i18n';
 import './node-item.scss';
 import moment from 'moment';
@@ -99,8 +100,8 @@ const NodeEle = ({ node, onHover, outHover, onClick, timeSpan, terminusKey, node
   const [params, curentRoute] = routeInfoStore.useStore((s) => [s.params, s.currentRoute]);
   const scale = topologyStore.useStore((s) => s.scale);
   const activedNode = topologyServiceStore.useStore((s) => s.activedNode);
-  const { serviceName: service } = params;
-  const isDefaultService = service && service === serviceName;
+  const serviceId = serviceAnalyticsStore.useStore((s) => s.serviceId);
+
   const isServiceList = curentRoute.path.includes('service-list');
 
   React.useEffect(() => {
@@ -344,7 +345,7 @@ const NodeEle = ({ node, onHover, outHover, onClick, timeSpan, terminusKey, node
       <div
         className={classnames({
           'topology-node': true,
-          actived: id === activedNode?.id || isDefaultService,
+          actived: id === activedNode?.id || node.serviceId === serviceId,
         })}
         onClick={isServiceList ? () => {} : onClick}
         style={style}

@@ -42,7 +42,8 @@ export function ServiceNameSelect() {
 
   return (
     <Select
-      value={serviceId}
+      // Avoid the problem of displaying the id first and then the label
+      value={serviceList.length > 0 ? serviceId : undefined}
       onChange={(value) => {
         updateState({ serviceId: value });
       }}

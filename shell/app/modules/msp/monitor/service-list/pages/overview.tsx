@@ -67,7 +67,7 @@ export default () => {
   }, [params.terminusKey, getData]);
 
   React.useEffect(() => {
-    if (JSON.stringify(topologyData) === '{}') {
+    if (JSON.stringify(topologyData) !== '{}') {
       setUseData(topologyData);
     } else {
       setUseData({ nodes: [] });
@@ -103,10 +103,10 @@ export default () => {
             linkTextEle={LinkText}
           />
           <div className="flex-2">
-            <ServiceListDashboard dashboardId="service_analysis-instants" />
+            <ServiceListDashboard dashboardId="service_analysis-instants" serviceId={serviceId} />
           </div>
         </div>
-        <ServiceListDashboard dashboardId="service_analysis-translation" />
+        <ServiceListDashboard dashboardId="service_analysis-translation" serviceId={serviceId} />
       </div>
     </div>
   );
