@@ -10,7 +10,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
-import i18n from 'i18n';
 
 // 通过权限配置页面导出角色数据覆盖，勿手动修改
 import i18n from 'i18n';
