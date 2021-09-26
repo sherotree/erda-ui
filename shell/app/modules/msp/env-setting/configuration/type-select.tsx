@@ -19,7 +19,7 @@ enum iconMap {
   Golang = 'go',
   PHP = 'php',
   Java = 'java',
-  Jageger = 'jaeger',
+  Jaeger = 'jaeger',
   'Node.js' = 'nodejs',
   '.NET Core' = 'net',
   'Java Agent' = 'java',
@@ -78,7 +78,7 @@ const TypeSelect = <T extends Item>({ list, onChange, value, className }: IProps
             }}
           >
             <ErdaCustomIcon size="60px" type={iconMap[key] ?? defaultIcon} {...iconProps} />
-            <div className={`ml-3 name font-medium group-hover:text-primary ${isSelect ? 'text-primary' : ''}`}>
+            <div className={`ml-0.5 mr-3 name font-medium group-hover:text-primary ${isSelect ? 'text-primary' : ''}`}>
               {displayName}
             </div>
           </div>

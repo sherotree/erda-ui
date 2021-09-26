@@ -16,6 +16,7 @@ import { Button as NusiButton, Tooltip, Dropdown, Menu, Popconfirm } from 'core/
 import { isEmpty, map, find } from 'lodash';
 import { useUnmount } from 'react-use';
 import { Icon as CustomIcon } from 'common';
+import { DownOne as IconDownOne } from '@icon-park/react';
 
 const fakeClick = 'fake-click';
 
@@ -27,6 +28,7 @@ export const Button = (props: CP_BUTTON.Props) => {
     suffixIcon,
     menu,
     tooltip,
+    tipProps = {},
     visible = true,
     disabled: pDisabled,
     disabledTip: pDisabledTip,
@@ -54,7 +56,7 @@ export const Button = (props: CP_BUTTON.Props) => {
       {suffixIcon ? (
         <CustomIcon type={suffixIcon} className="ml-1" />
       ) : isEmpty(menu) ? null : (
-        <CustomIcon type={'di'} className="ml-1" />
+        <IconDownOne theme="filled" className="ml-1" />
       )}
     </>
   );
@@ -74,7 +76,7 @@ export const Button = (props: CP_BUTTON.Props) => {
 
   if (disabled || pDisabled) {
     return (
-      <Tooltip title={disabledTip || pDisabledTip}>
+      <Tooltip title={disabledTip || pDisabledTip} {...tipProps}>
         <NusiButton {...rest} disabled>
           {content}
         </NusiButton>
@@ -141,5 +143,11 @@ export const Button = (props: CP_BUTTON.Props) => {
     </NusiButton>
   );
 
-  return tooltip ? <Tooltip title={tooltip}>{buttonComp}</Tooltip> : buttonComp;
+  return tooltip ? (
+    <Tooltip title={tooltip} {...tipProps}>
+      {buttonComp}
+    </Tooltip>
+  ) : (
+    buttonComp
+  );
 };

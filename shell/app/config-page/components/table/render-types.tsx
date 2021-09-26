@@ -19,7 +19,8 @@ import i18n from 'i18n';
 import moment from 'moment';
 import { RowContainer, Container } from '../container/container';
 import { statusColorMap, colorMap } from 'app/config-page/utils';
-import { Download as IconDownLoad } from '@icon-park/react';
+import { Download as IconDownLoad, Info as IconInfo, DownOne as IconDownOne } from '@icon-park/react';
+
 import { WithAuth } from 'user/common';
 import Text from '../text/text';
 
@@ -31,7 +32,7 @@ export const getTitleRender = (cItem: CP_TABLE.Column) => {
       <div>
         {title}
         <Tooltip title={getTitleTip(titleTip)}>
-          <CustomIcon type="info" className="text-sm text-sub ml-2" />
+          <IconInfo className="text-sm text-sub ml-2" />
         </Tooltip>
       </div>
     );
@@ -53,6 +54,25 @@ export const getTitleRender = (cItem: CP_TABLE.Column) => {
   return res;
 };
 
+interface IParams {
+  record: Obj;
+  execOperation: (op: CP_COMMON.Operation) => void;
+  operations?: Obj<CP_COMMON.Operation>;
+  customProps?: Obj;
+}
+const getItemClickProps = (params: IParams) => {
+  const { operations, customProps, execOperation, record } = params;
+  const extraProps: Obj = {};
+  if (operations?.click || customProps?.clickTableItem) {
+    extraProps.onClick = (e: any) => {
+      e.stopPropagation();
+      operations?.click && execOperation(operations.click);
+      customProps?.clickTableItem && customProps.clickTableItem(record);
+    };
+  }
+  return extraProps;
+};
+
 const DAY_WIDTH = 32;
 export const getRender = (val: any, record: CP_TABLE.RowData, extra: any) => {
   let Comp = val;
@@ -60,17 +80,10 @@ export const getRender = (val: any, record: CP_TABLE.RowData, extra: any) => {
     case 'linkText':
       {
         const { operations } = val;
-        const _p = {} as any;
-        if (operations?.click || extra.customProps?.clickTableItem) {
-          _p.onClick = (e: any) => {
-            e.stopPropagation();
-            operations?.click && extra.execOperation(operations.click);
-            extra.customProps?.clickTableItem && extra.customProps.clickTableItem(record);
-          };
-        }
+        const extraProps = getItemClickProps({ ...extra, operations, record });
         Comp = (
           <Tooltip title={val.value}>
-            <span className="fake-link nowrap" {..._p}>
+            <span className="fake-link nowrap" {...extraProps}>
               {val.value}
             </span>
           </Tooltip>
@@ -90,15 +103,13 @@ export const getRender = (val: any, record: CP_TABLE.RowData, extra: any) => {
     case 'textWithTags': // 文本后带tag的样式渲染
       {
         const { value, prefixIcon, tags, operations = {} } = val;
-        const hasPointer = operations?.click || extra.customProps?.clickTableItem;
-        const onClick = () => {
-          operations?.click && extra.execOperation(operations.click);
-          extra.customProps?.clickTableItem && extra.customProps.clickTableItem(record);
-        };
+        const extraProps = getItemClickProps({ ...extra, operations, record });
+        const hasPointer = !isEmpty(extraProps);
+
         Comp = (
           <div
             className={`table-render-twt w-full pl-2 flex items-center ${hasPointer ? 'cursor-pointer' : ''}`}
-            onClick={onClick}
+            {...extraProps}
           >
             {prefixIcon ? <CustomIcon type={prefixIcon} /> : null}
             <div className="twt-text">
@@ -115,9 +126,12 @@ export const getRender = (val: any, record: CP_TABLE.RowData, extra: any) => {
       break;
     case 'textWithIcon':
       {
-        const { value, prefixIcon, colorClassName, hoverActive = '' } = val;
+        const { value, prefixIcon, colorClassName, hoverActive = '', operations = {} } = val;
+
+        const extraProps = getItemClickProps({ ...extra, operations, record });
+        const hasPointer = !isEmpty(extraProps);
         Comp = (
-          <div className={`${hoverActive} flex items-center`}>
+          <div className={`${hoverActive} flex items-center ${hasPointer ? 'cursor-pointer' : ''}`} {...extraProps}>
             {prefixIcon ? <CustomIcon type={prefixIcon} className={`mr-1 ${colorClassName}`} /> : null}
             <Ellipsis title={value}>{value}</Ellipsis>
           </div>
@@ -297,7 +311,14 @@ export const getRender = (val: any, record: CP_TABLE.RowData, extra: any) => {
       }
       break;
     case 'textWithBadge':
-      Comp = val.status ? <Badge status={val.status || 'default'} text={val.value} /> : val.value;
+      Comp = val.status ? (
+        <div className="flex">
+          <Badge status={val.status || 'default'} />
+          <Ellipsis title={val.value} />
+        </div>
+      ) : (
+        val.value
+      );
       break;
     case 'textWithLevel':
       {
@@ -348,13 +369,17 @@ export const getRender = (val: any, record: CP_TABLE.RowData, extra: any) => {
       break;
     case 'multiple':
       {
-        const { renders } = val || {};
+        const { renders, operations } = val || {};
+        const extraProps = getItemClickProps({ ...extra, operations, record });
+        const hasPointer = !isEmpty(extraProps);
         Comp = (
-          <Container props={{ spaceSize: 'none' }}>
+          <Container props={{ spaceSize: 'none', className: hasPointer ? 'cursor-pointer' : '', ...extraProps }}>
             {map(renders, (rds, idx) => (
               <RowContainer key={`${idx}`}>
                 {map(rds, (rd, rdIdx) => (
-                  <div key={`${rdIdx}`}>{getRender(rd, record, extra)}</div>
+                  <div key={`${rdIdx}`} className="w-full">
+                    {getRender(rd, record, extra)}
+                  </div>
                 ))}
               </RowContainer>
             ))}
@@ -378,7 +403,7 @@ const memberSelectorValueItem = (user: any) => {
       <span className={'ml-1 text-sm nowrap'} title={name}>
         {displayName}
       </span>
-      <CustomIcon className="arrow-icon" type="di" />
+      <IconDownOne theme="filled" className="arrow-icon" />
     </div>
   );
 };
@@ -401,7 +426,7 @@ const DropdownSelector = (props: IDropdownSelectorProps) => {
         {prefixIcon ? <CustomIcon type={prefixIcon} /> : null}
         {value || <span className="text-desc">{i18n.t('unspecified')}</span>}
       </div>
-      <CustomIcon type="di" className="arrow-icon" />
+      <IconDownOne theme="filled" className="arrow-icon" />
     </div>
   );
 

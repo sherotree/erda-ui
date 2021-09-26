@@ -36,6 +36,7 @@ import {
   Form,
   Input,
   InputNumber,
+  List,
   message,
   Menu,
   Modal,
@@ -67,7 +68,7 @@ import FixRangePicker from './range-picker';
 import Table from './wrapped-table';
 import Tag from './wrapped-tag';
 import FormBuilder from '../common/components/form-builder';
-// import { Panel } from '../common/components/panel';
+import { Panel } from '../common/components/panel';
 import { Title } from '../common/components/title';
 import Ellipsis from '../common/components/ellipsis';
 import '@terminus/nusi/dist/nusi.scss';
@@ -76,12 +77,9 @@ import {
   Container,
   Filter,
   Shell,
-  Search,
   SideNavigation,
   PageHeader,
-  Panel,
   GlobalNavigation,
-  List,
   ConfigProvider as NusiConfigProvider,
 } from '@terminus/nusi';
 
@@ -146,7 +144,6 @@ export {
   Spin,
   Steps,
   Switch,
-  Search,
   Table,
   Transfer,
   Tree,

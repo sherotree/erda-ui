@@ -195,7 +195,7 @@ export const IssueRelation = React.forwardRef((props: IProps, ref: any) => {
     });
   };
 
-  const createAuth: boolean = usePerm((s) => s.project[issueType?.toLowerCase()].create.pass);
+  const createAuth: boolean = usePerm((s) => s.project[issueType?.toLowerCase()]?.create.pass);
   if (!issueDetail) return null;
   return (
     <div className="issue-relation">
@@ -438,6 +438,7 @@ const AddNewIssue = ({ onSaveRelation, iterationID, onCancel, defaultIssueType }
           ...val,
         }).then((res: number) => {
           onSaveRelation(res); // 添加关联
+          return res;
         });
       }}
     />

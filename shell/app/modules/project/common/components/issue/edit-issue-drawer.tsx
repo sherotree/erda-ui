@@ -627,12 +627,12 @@ export const EditIssueDrawer = (props: IProps) => {
   const defaultCustomFormData = React.useMemo(() => {
     const customFieldDefaultValues = {};
     map(fieldList, (item) => {
-      if (item?.required) {
-        if (item?.propertyType === 'Select') {
-          customFieldDefaultValues[item?.propertyName] = item?.enumeratedValues[0]?.id;
+      if (item && item.required) {
+        if (item.propertyType === 'Select') {
+          customFieldDefaultValues[item.propertyName] = item.enumeratedValues?.[0].id;
         }
-        if (item?.propertyType === 'MultiSelect') {
-          customFieldDefaultValues[item?.propertyName] = [item?.enumeratedValues[0]?.id];
+        if (item.propertyType === 'MultiSelect') {
+          customFieldDefaultValues[item.propertyName] = [item.enumeratedValues?.[0].id];
         }
       }
     });
@@ -691,7 +691,7 @@ export const EditIssueDrawer = (props: IProps) => {
   const deleteAuth = isMonitorTicket ? true : getAuth(permObj.delete, checkRole);
   const createAuth = permObj.create.pass;
   const editAuth = isMonitorTicket ? true : !isEditMode || getAuth(permObj.edit, checkRole);
-  const switchTypeAuth = permObj.switchType?.pass;
+  const switchTypeAuth = getAuth(permObj.switchType, checkRole);
 
   const addRelatedMattersProjectId = routeInfoStore.getState((s) => s.params).projectId;
   const { addIssueRelation } = issueStore.effects;
@@ -712,23 +712,23 @@ export const EditIssueDrawer = (props: IProps) => {
   }, [propsIssueType]);
 
   React.useEffect(() => {
-    if (id && visible) {
-      getIssueDetail({ type: issueType, id });
-      getIssueStreams({ type: issueType, id, pageNo: 1, pageSize: 50 });
-      getCustomFields();
-    } else {
-      visible &&
-        getCustomFieldsByProject({
-          propertyIssueType: issueType,
+    if (visible) {
+      if (id) {
+        getIssueDetail({ type: issueType, id });
+        getIssueStreams({ type: issueType, id, pageNo: 1, pageSize: 50 });
+        getCustomFields();
+      }
+      getCustomFieldsByProject({
+        propertyIssueType: issueType,
+        orgID,
+      }).then((res) => {
+        updateCustomFieldDetail({
+          property: res,
           orgID,
-        }).then((res) => {
-          updateCustomFieldDetail({
-            property: res,
-            orgID,
-            projectID: +addRelatedMattersProjectId,
-            issueID: undefined,
-          });
+          projectID: +addRelatedMattersProjectId,
+          issueID: undefined,
         });
+      });
     }
   }, [
     addRelatedMattersProjectId,

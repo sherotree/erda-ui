@@ -105,19 +105,27 @@ const org = createStore({
             goTo(`/${currentOrg.name}`, { replace: true });
           }
         }
-        // user doesn't joined the public org, go to dop
-        // temporary solution, it will removed until new solution is proposed by PD
-        if (resOrg?.isPublic && curPathname?.split('/')[2] !== 'dop') {
-          if (!orgs?.find((x) => x.name === currentOrg.name) || orgs?.length === 0) {
-            goTo(goTo.pages.dopRoot, { replace: true });
-          }
-        }
+
         if (currentOrg.name !== orgName) {
           goTo(location.pathname.replace(`/${orgName}`, `/${currentOrg.name}`), { replace: true }); // just replace the first match, which is org name
         }
         if (orgId) {
           const orgPermQuery = { scope: 'org', scopeID: `${orgId}` };
           const orgPermRes = await getResourcePermissions(orgPermQuery);
+
+          // user doesn't joined the public org, go to dop
+          // temporary solution, it will removed until new solution is proposed by PD
+          // except Support role
+          if (
+            !orgPermRes?.data?.roles.includes('Support') &&
+            resOrg?.isPublic &&
+            curPathname?.split('/')[2] !== 'dop'
+          ) {
+            if (!orgs?.find((x) => x.name === currentOrg.name) || orgs?.length === 0) {
+              goTo(goTo.pages.dopRoot, { replace: true });
+            }
+          }
+
           const orgAccess = get(orgPermRes, 'data.access');
           // 当前无该企业权限
           if (!orgAccess) {
@@ -139,6 +147,7 @@ const org = createStore({
             [k: string]: LAYOUT.IApp;
           };
           permStore.reducers.updatePerm(orgPermQuery.scope, orgPermRes.data);
+          update({ currentOrg, curPathOrg: payload.orgName });
           const menusMap = getSubSiderInfoMap();
           const appCenterAppList = getAppCenterAppList();
           appCenterAppList.forEach((a) => {
@@ -151,7 +160,7 @@ const org = createStore({
             key: 'dop',
           });
           breadcrumbStore.reducers.setInfo('curOrgName', currentOrg.displayName);
-          update({ currentOrg, curPathOrg: payload.orgName, initFinish: true });
+          update({ initFinish: true });
         }
       }
     },

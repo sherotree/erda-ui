@@ -18,6 +18,7 @@ import { useUpdate, Icon as CustomIcon } from 'common';
 import { useUserMap } from 'core/stores/userMap';
 import { OperationAction } from 'app/config-page/utils';
 import { getRender, getTitleRender } from './render-types';
+import { DownOne as IconDownOne } from '@icon-park/react';
 import i18n from 'i18n';
 import classnames from 'classnames';
 import './table.scss';
@@ -179,7 +180,10 @@ export function Table(props: CP_TABLE.Props) {
     : undefined;
 
   return visible ? (
-    <div className="relative" style={{ paddingBottom: configProps?.pagination === false ? 64 : 'unset' }}>
+    <div
+      className="relative"
+      style={{ paddingBottom: configProps?.pagination === false && batchOperations ? 64 : 'unset' }}
+    >
       {title ? <Title showDivider={false} level={2} title={title} /> : null}
       <PureTable
         className={`${cls} ${isGanttTable ? 'task-gantt-table' : ''}`}
@@ -303,7 +307,7 @@ const BatchOperation = (props: IBatchProps) => {
       <Dropdown overlay={dropdownMenu} zIndex={1000}>
         <Button>
           {i18n.t('batch operate')}
-          <CustomIcon type={'di'} className="ml-1" />
+          <IconDownOne theme="filled" className="ml-1" />
         </Button>
       </Dropdown>
     </div>

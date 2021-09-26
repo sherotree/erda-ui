@@ -12,10 +12,10 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import React from 'react';
-import { isEmpty, map, unset } from 'lodash';
+import { isEmpty, map, unset, sortBy, indexOf } from 'lodash';
 import { useDrop } from 'react-dnd';
-import { Button, Spin, Popconfirm, Pagination } from 'core/nusi';
-import { Icon as CustomIcon, useUpdate, ContractiveFilter } from 'common';
+import { Button, Spin, Popconfirm, Pagination, Tooltip } from 'core/nusi';
+import { Icon as CustomIcon, useUpdate, ContractiveFilter, ErdaCustomIcon } from 'common';
 import { useLoading } from 'core/stores/loading';
 import { WithAuth, usePerm } from 'user/common';
 import iterationStore from 'project/stores/iteration';
@@ -35,7 +35,7 @@ import './backlog.scss';
 
 const Backlog = () => {
   const [backlogIssues, backlogIssuesPaging] = iterationStore.useStore((s) => [s.backlogIssues, s.backlogIssuesPaging]);
-  const { pageSize, total } = backlogIssuesPaging;
+  const { pageSize, total, pageNo } = backlogIssuesPaging;
   const { getBacklogIssues, createIssue } = iterationStore.effects;
   const { clearBacklogIssues } = iterationStore.reducers;
   const { deleteIssue, updateIssue } = issueStore.effects;
@@ -48,34 +48,7 @@ const Backlog = () => {
   ]);
   const workflowStateList = issueWorkflowStore.useStore((s) => s.workflowStateList);
 
-  const stateCollection: Array<{ label: string | React.ReactNode; children: Array<{ label: string; value: string }> }> =
-    React.useMemo(() => {
-      const collection = workflowStateList.reduce((acc, current) => {
-        const { issueType, stateName, stateID } = current;
-        if (!['BUG', 'REQUIREMENT', 'TASK'].includes(issueType)) {
-          return acc;
-        }
-        if (acc[issueType]) {
-          acc[issueType].push({ label: stateName, value: `${stateID}` });
-        } else {
-          acc[issueType] = [{ label: stateName, value: `${stateID}` }];
-        }
-        return acc;
-      }, {});
-      const options = map(collection, (stateArray, issueType) => {
-        const label = ISSUE_ICON_MAP[issueType];
-        return {
-          label: (
-            <span>
-              {label.icon}
-              {label.name}
-            </span>
-          ),
-          children: stateArray,
-        };
-      });
-      return options;
-    }, [workflowStateList]);
+  const allStateIds = React.useRef<number[]>([]);
 
   const [{ isAdding, curIssueDetail, drawerVisible, filterState }, updater, update] = useUpdate({
     isAdding: false,
@@ -84,19 +57,67 @@ const Backlog = () => {
     filterState: { ...restQuery } as Obj,
   });
 
+  const stateCollection: Array<{ label: string | React.ReactNode; children: Array<{ label: string; value: string }> }> =
+    React.useMemo(() => {
+      const stateIds: number[] = [];
+      const initState: string[] = [];
+      const typeArr = ['REQUIREMENT', 'TASK', 'BUG'];
+      const collection = workflowStateList.reduce((acc, current) => {
+        const { issueType, stateName, stateID, stateBelong } = current;
+        if (!typeArr.includes(issueType)) {
+          return acc;
+        }
+        if (!['CLOSED', 'DONE'].includes(stateBelong)) {
+          initState.push(`${stateID}`);
+        }
+        if (acc[issueType]) {
+          acc[issueType].push({ label: stateName, value: `${stateID}` });
+        } else {
+          acc[issueType] = [{ label: stateName, value: `${stateID}` }];
+        }
+        if (!allStateIds.current.length) {
+          stateIds.push(stateID);
+        }
+        return acc;
+      }, {});
+      if (!allStateIds.current.length) {
+        allStateIds.current = stateIds;
+      }
+
+      updater.filterState((prev: Obj) => ({ state: initState, ...prev }));
+      const options = sortBy(
+        map(collection, (stateArray, issueType) => {
+          const label = ISSUE_ICON_MAP[issueType];
+          return {
+            label: (
+              <span>
+                {label.icon}
+                {label.name}
+              </span>
+            ),
+            labelValue: label.value,
+            children: stateArray,
+          };
+        }),
+        (item) => indexOf(typeArr, item.labelValue),
+      );
+      return options;
+    }, [workflowStateList]);
+
+  React.useEffect(() => {
+    getList();
+  }, [stateCollection]);
+
   useEffectOnce(() => {
     if (!labelList.length) {
       getLabels({ type: 'issue' });
     }
-    getList();
     if (queryId && queryType) {
       update({
         curIssueDetail: { id: queryId, type: queryType } as ISSUE.Issue,
         drawerVisible: true,
       });
     }
-    issueWorkflowStore.getStatesByIssue({ projectID: +projectId });
-
     return () => {
       clearBacklogIssues();
     };
@@ -126,7 +147,7 @@ const Backlog = () => {
     (filters: Obj = {}, goTop = true) => {
       goTop && (listRef.current.scrollTop = 0);
       const submitValues = { ...filterState, ...filters };
-      const { finishedAtStartEnd, createdAtStartEnd } = submitValues;
+      const { finishedAtStartEnd, createdAtStartEnd, state } = submitValues;
       if (finishedAtStartEnd) {
         unset(submitValues, 'finishedAtStartEnd');
         submitValues.startFinishedAt = finishedAtStartEnd[0];
@@ -137,7 +158,7 @@ const Backlog = () => {
         submitValues.startCreatedAt = createdAtStartEnd[0];
         submitValues.endCreatedAt = createdAtStartEnd[1];
       }
-      return getBacklogIssues(submitValues);
+      return getBacklogIssues({ ...submitValues, state: (state as number[])?.length ? state : allStateIds.current });
     },
     [filterState, getBacklogIssues],
   );
@@ -179,22 +200,11 @@ const Backlog = () => {
         options: [ISSUE_TYPE_MAP.REQUIREMENT, ISSUE_TYPE_MAP.TASK, ISSUE_TYPE_MAP.BUG],
       },
       {
-        key: 'label',
-        label: i18n.t('project:label'),
-        emptyText: i18n.t('application:all'),
-        fixed: false,
-        showIndex: 2,
-        haveFilter: true,
-        type: 'select' as const,
-        placeholder: i18n.t('filter by {name}', { name: i18n.t('project:label') }),
-        options: map(labelList, (item) => ({ label: item.name, value: `${item.id}` })),
-      },
-      {
         key: 'priority',
         label: i18n.t('project:priority'),
         emptyText: i18n.t('application:all'),
         fixed: false,
-        showIndex: 3,
+        showIndex: 2,
         type: 'select' as const,
         placeholder: i18n.t('filter by {name}', { name: i18n.t('project:priority') }),
         options: map(ISSUE_PRIORITY_MAP),
@@ -205,6 +215,18 @@ const Backlog = () => {
         type: 'select' as const,
         options: stateCollection,
         allowClear: false,
+        fixed: false,
+        showIndex: 3,
+      },
+      {
+        key: 'label',
+        label: i18n.t('project:label'),
+        emptyText: i18n.t('application:all'),
+        fixed: false,
+        haveFilter: true,
+        type: 'select' as const,
+        placeholder: i18n.t('filter by {name}', { name: i18n.t('project:label') }),
+        options: map(labelList, (item) => ({ label: item.name, value: `${item.id}` })),
       },
       {
         key: 'assignee',
@@ -272,8 +294,14 @@ const Backlog = () => {
   return (
     <div className="backlog-issues flex flex-col justify-center h-full" ref={drop}>
       <div className="backlog-issues-title flex justify-between items-center mb-2">
-        <div>
+        <div className="flex items-center">
           <span className="font-bold text-base mr-2">{i18n.t('project:backlog')}</span>
+          <Tooltip
+            placement="right"
+            title={i18n.t('project:this is mainly for items that have not been scheduled for a specific iteration')}
+          >
+            <ErdaCustomIcon type="help" className="cursor-pointer mr-2" />
+          </Tooltip>
           <span className="text-desc">{i18n.t('{num} {type}', { num: total, type: i18n.t('project:issue') })}</span>
         </div>
         <div>
@@ -329,9 +357,9 @@ const Backlog = () => {
             }
             <Pagination
               className="flex items-center flex-wrap justify-end pt-2"
-              defaultCurrent={1}
               showSizeChanger
               total={total}
+              current={pageNo}
               pageSize={pageSize}
               onChange={handleChangePage}
             />

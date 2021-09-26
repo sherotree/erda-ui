@@ -12,7 +12,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search } from 'core/nusi';
+import { Input } from 'core/nusi';
 import { PureBoardGrid } from 'common';
 import i18n from 'i18n';
 import { goTo } from 'common/utils';
@@ -21,8 +21,12 @@ import topologyStore from 'msp/env-overview/topology/stores/topology';
 import routeInfoStore from 'core/stores/route';
 import { TimeSelectWithStore } from 'msp/components/time-select';
 import monitorCommonStore from 'common/stores/monitorCommon';
+import mspStore from 'msp/stores/micro-service';
+
+const { Search } = Input;
 
 export default () => {
+  const currentProject = mspStore.useStore((s) => s.currentProject);
   const { range } = monitorCommonStore.useStore((s) => s.globalTimeSelectSpan);
   const params = routeInfoStore.useStore((s) => s.params);
   const [layout, setLayout] = useState([]);
@@ -49,8 +53,8 @@ export default () => {
     if (eventName === 'jumpToDetail') {
       goTo(goTo.pages.mspServiceAnalyze, {
         ...params,
+        applicationId: currentProject?.type === 'MSP' ? '-' : record?.application_id,
         serviceName: cellValue,
-        applicationId: record?.application_id,
         serviceId: window.encodeURIComponent(record?.service_id || ''),
       });
     }
@@ -62,7 +66,9 @@ export default () => {
         <Search
           allowClear
           placeholder={i18n.t('msp:search by service name')}
-          onHandleSearch={(v) => setServiceName(v)}
+          style={{ width: 200 }}
+          size="small"
+          onSearch={(v) => setServiceName(v)}
         />
         <TimeSelectWithStore />
       </div>
