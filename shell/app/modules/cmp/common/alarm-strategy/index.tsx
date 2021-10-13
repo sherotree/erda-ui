@@ -37,8 +37,11 @@ import clusterStore from 'cmp/stores/cluster';
 import orgStore from 'app/org-home/stores/org';
 import './index.scss';
 import routeInfoStore from 'core/stores/route';
+import { AddOne as IconAddOne, ReduceOne as IconReduceOne } from '@icon-park/react';
+import { mockTriggerConditions, mockNotifyStrategy } from './mock';
 
 const { confirm, warning } = Modal;
+const { Option } = Select;
 
 enum ScopeType {
   ORG = 'org',
@@ -115,6 +118,12 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     editingRules: [] as any,
     editingFormRule: {},
     activedGroupId: undefined,
+    triggerConditionKey: null,
+    triggerConditionOperator: null,
+    triggerConditionValue: null,
+    selectedNotifyGroup: null,
+    notifyLevel: null,
+    notifyMethod: null,
   });
 
   useMount(() => {
@@ -244,9 +253,9 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
           }}
         >
           {map(allRules, ({ alertIndex, id }) => (
-            <Select.Option key={id} value={alertIndex}>
+            <Option key={id} value={alertIndex}>
               {allRuleMap[alertIndex]}
-            </Select.Option>
+            </Option>
           ))}
         </Select>
       ),
@@ -261,9 +270,9 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
           onSelect={(window: any) => handleEditEditingRule(key, { key: 'window', value: Number(window) })}
         >
           {map(windows, (item) => (
-            <Select.Option key={item} value={item}>
+            <Option key={item} value={item}>
               {item}
-            </Select.Option>
+            </Option>
           ))}
         </Select>
       ),
@@ -285,7 +294,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
                   defaultValue={item.aggregator}
                   disabled
                 >
-                  {map(aggregatorMap, (name, _key) => (<Select.Option key={_key} value={_key}>{name}</Select.Option>))}
+                  {map(aggregatorMap, (name, _key) => (<Option key={_key} value={_key}>{name}</Option>))}
                 </Select> */}
               <Select
                 className="operator mr-2"
@@ -295,9 +304,9 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
                 }}
               >
                 {map(operatorMap, (name, _key) => (
-                  <Select.Option key={_key} value={_key}>
+                  <Option key={_key} value={_key}>
                     {name}
-                  </Select.Option>
+                  </Option>
                 ))}
               </Select>
               {getFunctionsValueElement(item, index, key)}
@@ -332,6 +341,125 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     },
   ];
 
+  const TriggerConditionSelect = () => {
+    const selectedTrigger = mockTriggerConditions.data.find((x) => x?.key === state.triggerConditionKey);
+    const triggerOperators = selectedTrigger?.operators || [];
+    const triggerOptions = selectedTrigger?.options || [];
+
+    return (
+      <div className="flex">
+        <Select
+          className="mr-8"
+          value={state.triggerConditionKey}
+          onSelect={(value) =>
+            update({
+              triggerConditionKey: value,
+              triggerConditionValue: null,
+              triggerConditionOperator: null,
+            })
+          }
+        >
+          {map(mockTriggerConditions.data, (item) => {
+            return (
+              <Option key={item?.key} value={item?.key}>
+                {item?.display}
+              </Option>
+            );
+          })}
+        </Select>
+        <Select
+          className="mr-8"
+          value={state.triggerConditionOperator}
+          onSelect={(value) => updater.triggerConditionOperator(value)}
+        >
+          {map(triggerOperators, (item) => {
+            return (
+              <Option key={item?.key} value={item?.key}>
+                {item?.display}
+              </Option>
+            );
+          })}
+        </Select>
+        <Select value={state.triggerConditionValue} onSelect={(value) => updater.triggerConditionValue(value)}>
+          {map(triggerOptions, (item) => {
+            return (
+              <Option key={item?.key} value={item?.key}>
+                {item?.display}
+              </Option>
+            );
+          })}
+        </Select>
+      </div>
+    );
+  };
+
+  const NotifyGroupSelect = () => {
+    const selectedNotifyGroup = mockNotifyStrategy.data?.groups?.find((x) => x?.key === state.selectedNotifyGroup);
+    const levels = mockNotifyStrategy?.data?.levels || [];
+    const notifyMethodOptions = selectedNotifyGroup?.notifyMethods || [];
+
+    return (
+      <div className="flex">
+        <Select
+          className="mr-8"
+          value={state.selectedNotifyGroup}
+          dropdownRender={(menu) => (
+            <div>
+              {menu}
+              <Divider className="my-1" />
+              <div className="text-xs px-2 py-1 text-desc" onMouseDown={(e) => e.preventDefault()}>
+                <WithAuth pass={addNotificationGroupAuth}>
+                  <span
+                    className="hover-active"
+                    onClick={() => {
+                      goTo(notifyGroupPage[scopeType], { projectId: scopeId, ...params });
+                    }}
+                  >
+                    {i18n.t('org:add more notification groups')}
+                  </span>
+                </WithAuth>
+              </div>
+            </div>
+          )}
+          onSelect={(value) =>
+            update({
+              selectedNotifyGroup: value,
+              notifyMethod: null,
+              notifyLevel: null,
+            })
+          }
+        >
+          {map(mockNotifyStrategy.data?.groups, (item) => {
+            return (
+              <Option key={item?.key} value={item?.key}>
+                {item?.display}
+              </Option>
+            );
+          })}
+        </Select>
+        <Select className="mr-8" value={state.notifyLevel} onSelect={(value) => updater.notifyLevel(value)}>
+          {map(levels, (item) => {
+            return (
+              <Option key={item?.key} value={item?.key}>
+                {item?.display}
+              </Option>
+            );
+          })}
+        </Select>
+        <Select value={state.notifyMethod} onSelect={(value) => updater.notifyMethod(value)}>
+          {map(notifyMethodOptions, (item) => {
+            return (
+              <Option key={item?.key} value={item?.key}>
+                {item?.display}
+              </Option>
+            );
+          })}
+        </Select>
+      </div>
+    );
+  };
+
+  // console.log('state.editingRules', state.editingRules, { allRules });
   let fieldsList = [
     {
       label: i18n.t('org:alarm name'),
@@ -341,6 +469,11 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
         maxLength: 50,
       },
       initialValue: state.editingFormRule.name,
+    },
+    {
+      label: i18n.d('触发条件'),
+      name: 'triggerConditions',
+      getComp: () => TriggerConditionSelect(),
     },
     {
       label: i18n.t('org:alarm rule'),
@@ -405,47 +538,52 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       options: map(SILENCE_PERIOD_POLICY_MAP, (name, value) => ({ name, value })),
     },
     {
-      label: i18n.t('org:select group'),
+      label: i18n.d('org:select group'),
       name: 'groupId',
-      initialValue: state.activedGroupId,
-      config: {
-        valuePropType: 'array',
-      },
-      getComp: ({ form }: { form: FormInstance }) => {
-        return (
-          <Select
-            onSelect={(id: any) => {
-              form.setFieldsValue({ groupType: [], groupId: id });
-              updater.activedGroupId(id);
-            }}
-            dropdownRender={(menu) => (
-              <div>
-                {menu}
-                <Divider className="my-1" />
-                <div className="text-xs px-2 py-1 text-desc" onMouseDown={(e) => e.preventDefault()}>
-                  <WithAuth pass={addNotificationGroupAuth}>
-                    <span
-                      className="hover-active"
-                      onClick={() => {
-                        goTo(notifyGroupPage[scopeType], { projectId: scopeId, ...params });
-                      }}
-                    >
-                      {i18n.t('org:add more notification groups')}
-                    </span>
-                  </WithAuth>
-                </div>
-              </div>
-            )}
-          >
-            {map(notifyGroups, ({ id, name }) => (
-              <Select.Option key={id} value={id}>
-                {name}
-              </Select.Option>
-            ))}
-          </Select>
-        );
-      },
+      getComp: () => NotifyGroupSelect(),
     },
+    // {
+    //   label: i18n.t('org:select group'),
+    //   name: 'groupId',
+    //   initialValue: state.activedGroupId,
+    //   config: {
+    //     valuePropType: 'array',
+    //   },
+    //   getComp: ({ form }: { form: FormInstance }) => {
+    //     return (
+    //       <Select
+    //         onSelect={(id: any) => {
+    //           form.setFieldsValue({ groupType: [], groupId: id });
+    //           updater.activedGroupId(id);
+    //         }}
+    //         dropdownRender={(menu) => (
+    //           <div>
+    //             {menu}
+    //             <Divider className="my-1" />
+    //             <div className="text-xs px-2 py-1 text-desc" onMouseDown={(e) => e.preventDefault()}>
+    //               <WithAuth pass={addNotificationGroupAuth}>
+    //                 <span
+    //                   className="hover-active"
+    //                   onClick={() => {
+    //                     goTo(notifyGroupPage[scopeType], { projectId: scopeId, ...params });
+    //                   }}
+    //                 >
+    //                   {i18n.t('org:add more notification groups')}
+    //                 </span>
+    //               </WithAuth>
+    //             </div>
+    //           </div>
+    //         )}
+    //       >
+    //         {map(notifyGroups, ({ id, name }) => (
+    //           <Option key={id} value={id}>
+    //             {name}
+    //           </Option>
+    //         ))}
+    //       </Select>
+    //     );
+    //   },
+    // },
   ];
 
   if (scopeType === ScopeType.ORG) {
@@ -557,7 +695,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       },
     });
   };
-
+  console.log(state.editingFormRule, state.editingRules, { alertTypes }, 6677);
   const handleEditALarm = (id: number) => {
     getAlertDetail(id).then(({ name, clusterNames, appIds, rules, notifies }: any) => {
       updater.editingFormRule({
@@ -736,7 +874,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
           onCancel={handleCloseModal}
           title={isEmpty(state.editingFormRule) ? i18n.t('org:new strategy') : i18n.t('org:edit strategy')}
           fieldsList={fieldsList}
-          modalProps={{ destroyOnClose: true }}
+          modalProps={{ destroyOnClose: true, bodyStyle: { height: '70vh', overflow: 'auto' } }}
           onOk={handleAddAlarm}
           beforeSubmit={beforeSubmit}
         />
