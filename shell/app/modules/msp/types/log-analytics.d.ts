@@ -54,6 +54,17 @@ declare namespace LOG_ANALYTICS {
     highlight: boolean;
   }
 
+  interface QueryLogContext {
+    timestampNanos: string;
+    id: string;
+    offset: number;
+    count: number;
+    query: string;
+    sort: string;
+    addon: string;
+    clusterName: string;
+  }
+
   interface LogItem {
     highlight: {
       [key: string]: string[];
@@ -68,6 +79,7 @@ declare namespace LOG_ANALYTICS {
         [key: string]: string;
       };
       timestamp: number;
+      timestampNanos?: string;
     };
   }
 

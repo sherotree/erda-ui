@@ -115,7 +115,7 @@ interface ILogItemToolBarProps {
   showTags: string[];
   onClickField: (tag: string, field: string, target?: DOMRect) => void;
   onAction: (type: IMenuType, tag: string, field: string, jumpOut?: boolean) => void;
-  onHandleLogModalVisible: (id: string) => void;
+  onHandleLogModalVisible: (id: string, source: LOG_ANALYTICS.LogItem) => void;
 }
 
 const LogItemToolBar = ({
@@ -177,7 +177,13 @@ const LogItemToolBar = ({
           </span>
         </Copy>
         <span className="text-darkgray hover:text-primary">
-          <IconLogSearch {...iconProps} onClick={() => onHandleLogModalVisible(data.source._id)} />
+          <IconLogSearch
+            {...iconProps}
+            onClick={() => {
+              console.log({ data }, 8899);
+              onHandleLogModalVisible(data?.source);
+            }}
+          />
         </span>
         <span className="text-darkgray hover:text-primary">
           <Popover content={i18n.t('org:create analysis rule')}>
@@ -315,7 +321,8 @@ const LogContentRender: React.FC<ILogerContent> = ({ content, tag, onClickField,
 const LogRender = ({ data, renderIndex, queryString, onFieldSelect, showTags, fields }: IProps) => {
   const [visible, setVisible] = React.useState(false);
   const [isLogModalVisible, setIsLogModalVisible] = React.useState(false);
-  const [viewLogId, setViewLogId] = React.useState('');
+  const [viewLogSource, setViewLogSource] = React.useState({});
+  const [viewLogId, setViewLogId] = React.useState({});
   const ref = React.useRef<DOMRect>();
   const fieldsMap = React.useRef<Obj>({});
   React.useEffect(() => {
@@ -344,9 +351,10 @@ const LogRender = ({ data, renderIndex, queryString, onFieldSelect, showTags, fi
     [queryString, onFieldSelect],
   );
 
-  const handleLogModalVisible = (id: string) => {
+  const handleLogModalVisible = (source: Omit<LOG_ANALYTICS.LogItem, 'highlight'>) => {
+    console.log({ source });
     setIsLogModalVisible(true);
-    setViewLogId(id);
+    setViewLogSource(source);
   };
   return (
     <div className="min-h-full">
@@ -402,7 +410,7 @@ const LogRender = ({ data, renderIndex, queryString, onFieldSelect, showTags, fi
         footer={null}
         title="上下文浏览"
       >
-        <LogContext id={viewLogId} data={data} />
+        <LogContext source={viewLogSource} data={data} />
       </Modal>
     </div>
   );
