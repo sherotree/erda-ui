@@ -1,0 +1,19 @@
+.log-field-menu {
+  .ant-menu-submenu {
+    .ant-menu-submenu-title {
+      padding: 0 !important;
+    }
+
+    .ant-menu-item {
+      line-height: unset;
+      .ant-progress-line {
+        .ant-progress-outer {
+          padding-right: 40px;
+        }
+        .ant-progress-text {
+          margin-left: 0;
+        }
+      }
+    }
+  }
+}

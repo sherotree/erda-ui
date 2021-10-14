@@ -29,6 +29,8 @@ import {
   Plus as IconPlus,
   Share as IconShare,
   FileSearchTwo as IconLogSearch,
+  Down as IconDown,
+  Right as IconRight,
 } from '@icon-park/react';
 import { IIconProps } from '@icon-park/react/es/runtime';
 import Spotlight from 'msp/pages/log-analysis/components/spotlight';
@@ -264,6 +266,10 @@ interface ILogerContent {
 
 const LogContentRender: React.FC<ILogerContent> = ({ content, tag, onClickField, onAction, highlights }) => {
   const spanRef = React.useRef<{ [k: string]: HTMLSpanElement | null }>({});
+  const [isExpand, setIsExpand] = React.useState(false);
+  const isFoldContent = String(content).length > 1000;
+  const value = isFoldContent && !isExpand ? `${String(content).slice(0, 1000)} ...` : content;
+
   const handleClick = React.useCallback(
     (field: string, refFlag) => {
       const target = spanRef.current[refFlag]?.getBoundingClientRect();
@@ -277,45 +283,72 @@ const LogContentRender: React.FC<ILogerContent> = ({ content, tag, onClickField,
     },
     [tag, onAction],
   );
-  return String(content)
-    .split(/\r?\n/g)
-    .map((item) => {
-      return (
-        <>
-          {String(item)
-            .split(logTokenReg)
-            .map((t, index) => {
-              if (logToken[t]) {
-                return <span className={`font-medium ${t === '\t' ? 'ml-4' : ''}`}>{t}</span>;
-              } else {
-                const isHighlight = highlights?.includes(t);
-                return (
-                  <Query
-                    onMenuClick={(key, jumpOut) => {
-                      handleMenuClick(key, t, jumpOut);
+
+  return (
+    <span>
+      {isFoldContent && (
+        <span className="absolute -left-5">
+          {isExpand ? (
+            <>
+              <IconDown
+                className="cursor-pointer"
+                theme="outline"
+                size="14"
+                fill="currentColor"
+                onClick={() => {
+                  setIsExpand(false);
+                }}
+              />
+            </>
+          ) : (
+            <IconRight
+              className="cursor-pointer"
+              theme="outline"
+              size="14"
+              fill="#333"
+              onClick={() => {
+                setIsExpand(true);
+              }}
+            />
+          )}
+        </span>
+      )}
+
+      <>
+        {String(value)
+          .split(logTokenReg)
+          .map((t, index) => {
+            if (logToken[t]) {
+              return <span className={`font-medium ${t === '\t' ? 'ml-4' : ''}`}>{t}</span>;
+            } else {
+              const isHighlight = highlights?.includes(t);
+              return (
+                <Query
+                  onMenuClick={(key, jumpOut) => {
+                    handleMenuClick(key, t, jumpOut);
+                  }}
+                >
+                  <span
+                    ref={(e) => {
+                      spanRef.current[`${t}-${index}`] = e;
                     }}
+                    onClick={() => {
+                      handleClick(t, `${t}-${index}`);
+                    }}
+                    className={`cursor-pointer font-medium inline-block ${
+                      isHighlight ? 'text-red' : 'hover:text-primary'
+                    }`}
                   >
-                    <span
-                      ref={(e) => {
-                        spanRef.current[`${t}-${index}`] = e;
-                      }}
-                      onClick={() => {
-                        handleClick(t, `${t}-${index}`);
-                      }}
-                      className={`cursor-pointer font-medium inline-block ${
-                        isHighlight ? 'text-red' : 'hover:text-primary'
-                      }`}
-                    >
-                      {t}
-                    </span>
-                  </Query>
-                );
-              }
-            })}
-          <br />
-        </>
-      );
-    });
+                    {t}
+                  </span>
+                </Query>
+              );
+            }
+          })}
+        <br />
+      </>
+    </span>
+  );
 };
 
 const LogRender = ({ data, renderIndex, queryString, onFieldSelect, showTags, fields }: IProps) => {
@@ -364,6 +397,7 @@ const LogRender = ({ data, renderIndex, queryString, onFieldSelect, showTags, fi
           source: { tags, ...rest },
           highlight,
         } = item;
+
         return (
           <div key={rest._id} className="flex p-2 border-0 border-b border-brightgray border-solid hover:bg-magnolia">
             {renderIndex ? renderIndex(item) : null}
@@ -378,13 +412,15 @@ const LogRender = ({ data, renderIndex, queryString, onFieldSelect, showTags, fi
                 onAction={handleClickMenu}
                 onHandleLogModalVisible={handleLogModalVisible}
               />
+
               {map(rest, (value, tag) => {
                 if (!showTags.includes(tag)) {
                   return null;
                 }
+
                 const highlights = highlight?.[tag] ?? [];
                 return (
-                  <p className="text-xs leading-5">
+                  <p className="text-xs leading-5 relative">
                     <span className="bg-cultured leading-5 font-medium">{tag}</span>:{' '}
                     <span className="leading-5">
                       <LogContentRender

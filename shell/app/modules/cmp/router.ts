@@ -1,16 +1,3 @@
-// Copyright (c) 2021 Terminus, Inc.
-//
-// This program is free software: you can use, redistribute, and/or modify
-// it under the terms of the GNU Affero General Public License, version 3
-// or later ("AGPL"), as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful, but WITHOUT
-// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-// FITNESS FOR A PARTICULAR PURPOSE.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 import getDcosRouter from 'dcos/router';
 import i18n from 'i18n';
 import { map } from 'lodash';
@@ -380,6 +367,36 @@ function getCmpRouter(): RouteConfigItem[] {
                   getComp: (cb) => cb(import('dcos/pages/service-manager/redis-manager/index')),
                   breadcrumbName: '{params.redisID}',
                   tabs: map(redisTabs),
+                },
+              ],
+            },
+          ],
+        },
+        {
+          path: 'log',
+          routes: [
+            {
+              path: 'query',
+              breadcrumbName: i18n.t('log query'),
+              layout: { grayBg: true, fullHeight: true },
+              getComp: (cb) => cb(import('app/modules/msp/pages/log-analysis')),
+            },
+            {
+              path: 'rule',
+              breadcrumbName: i18n.t('analysis rule'),
+              routes: [
+                {
+                  path: 'add',
+                  breadcrumbName: i18n.t('org:add analysis rule'),
+                  getComp: (cb) => cb(import('app/modules/cmp/pages/log-analyze-rule/detail')),
+                },
+                {
+                  path: ':ruleId',
+                  breadcrumbName: i18n.t('org:edit analysis rule'),
+                  getComp: (cb) => cb(import('app/modules/cmp/pages/log-analyze-rule/detail')),
+                },
+                {
+                  getComp: (cb) => cb(import('app/modules/cmp/pages/log-analyze-rule')),
                 },
               ],
             },

@@ -13,12 +13,90 @@
 
 import React from 'react';
 import mspLogAnalyticsStore from 'msp/stores/log-analytics';
-import { Popover, Tag, Dropdown, Select, Button, Input } from 'core/nusi';
+import { Popover, Tag, Dropdown, Select, Button, Input, Menu, Switch } from 'core/nusi';
+import { CloseSmall as IconCloseSmall, SettingTwo as IconSettingTwo } from '@icon-park/react';
+import i18n from 'i18n';
 import mspStore from 'msp/stores/micro-service';
 import { find, map } from 'lodash';
 
 const { Group: ButtonGroup } = Button;
-const LogContextHeader = ({ displayLogTags }) => {
+const { Option } = Select;
+
+const Item: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ children, ...rest }) => {
+  return (
+    <div {...rest} className="flex justify-between items-center" onClick={(e) => e.stopPropagation()}>
+      {children}
+    </div>
+  );
+};
+const LogContextHeader = ({ displayLogTags, source }) => {
+  const tagOptions = map(source.tags, (value, key) => {
+    console.log({ value, key }, 111);
+    return <Option value={key} key={key}>{`${key}: ${value}`}</Option>;
+  });
+  console.log({ tagOptions });
+  const [visible, setVisible] = React.useState(false);
+  const handleDisplayChange = (checked: boolean, record: LOG_ANALYTICS.IField) => {
+    // const newField = produce(data, (draft) => {
+    //   if (draft) {
+    //     const target = draft.find(t => t.fieldName === record.fieldName);
+    //     target.display = checked;
+    //   }
+    // });
+    // window.localStorage.setItem(addonId, JSON.stringify(newField));
+    // updateShowTags(newField);
+  };
+
+  const menu = React.useMemo(() => {
+    return (
+      <Menu>
+        <Menu.Item className="cursor-default">
+          <Item>
+            <div className="font-semibold">{i18n.t('msp:display setting')}</div>
+            <span className="hover:text-primary">
+              <IconCloseSmall
+                className="cursor-pointer"
+                theme="filled"
+                size="24"
+                fill="currentColor"
+                onClick={() => {
+                  setVisible(false);
+                }}
+              />
+            </span>
+          </Item>
+        </Menu.Item>
+        <Menu.Item className="cursor-default">
+          <Item>
+            <div className="text-darkgray">{i18n.t('field')}</div>
+            <div className="text-darkgray">{i18n.t('msp:show')}</div>
+          </Item>
+        </Menu.Item>
+        <Menu.Divider />
+        <div className="max-h-48 overflow-y-auto" data-l={[]?.length}>
+          {[]?.map((item) => {
+            return (
+              <>
+                <Menu.Item className="cursor-default ant-dropdown-menu-item ant-dropdown-menu-item-only-child">
+                  <Item>
+                    <div>{item.fieldName}</div>
+                    <Switch
+                      size="small"
+                      checked={item.display}
+                      onChange={(checked) => {
+                        handleDisplayChange(checked, item);
+                      }}
+                    />
+                  </Item>
+                </Menu.Item>
+                <Menu.Divider className="ant-dropdown-menu-item-divider" />
+              </>
+            );
+          })}
+        </div>
+      </Menu>
+    );
+  }, []);
   return (
     <>
       <div className="flex">
@@ -30,8 +108,27 @@ const LogContextHeader = ({ displayLogTags }) => {
             </Tag>
           ))}
         </div>
-        <Select>标签</Select>
-        <span>字段过滤</span>
+        <Select mode="multiple" allowClear style={{ width: 400 }} placeholder="选择标签" onChange={() => {}}>
+          {tagOptions}
+        </Select>
+        <Dropdown
+          visible={visible}
+          onVisibleChange={setVisible}
+          overlayClassName="w-64"
+          trigger={['click']}
+          overlay={menu}
+        >
+          <Button
+            size="small"
+            className="flex items-center cursor-pointer ml-2"
+            onClick={() => {
+              setVisible(true);
+            }}
+          >
+            <IconSettingTwo theme="outline" size="14" fill="currentColor" />
+            {i18n.t('setting')}
+          </Button>
+        </Dropdown>
       </div>
       <div className="flex">
         <ButtonGroup className="download-btn-group mb-4">
@@ -56,9 +153,13 @@ const LogContextHeader = ({ displayLogTags }) => {
 
 const LogContextRecord = () => {
   return (
-    <div>
-      <div>1</div>
-      <div>2020-01-</div>
+    <div className="flex">
+      <div className="mr-4">1</div>
+      <div className="mr-4">2021-10-10 12:30:89</div>
+      <div>
+        <Tag>标签</Tag>
+        <div>neirong</div>
+      </div>
     </div>
   );
 };
@@ -70,7 +171,7 @@ const LogContext = ({ source, data }: { source: any; data: any }) => {
   const [logData, setLogData] = React.useState([]);
   const { getLogAnalyticContext } = mspLogAnalyticsStore.effects;
   const foo = [] as any;
-  console.log({ data, source });
+
   React.useEffect(() => {
     const { timestampNanos, id, offset } = source;
     // TODO: 进来初始数据，应该0号前后是有数据的
@@ -84,7 +185,7 @@ const LogContext = ({ source, data }: { source: any; data: any }) => {
       count: 20,
     }).then((content) => setLogData(content));
   }, []);
-  console.log({ logData }, 8888);
+
   React.useEffect(() => {
     map(defaultLogTags, (item) => {
       if (item in zeroLog.source.tags) {
@@ -94,7 +195,6 @@ const LogContext = ({ source, data }: { source: any; data: any }) => {
     setDisplayLogTags(foo);
   }, []);
   // TODO: 标签 XX 参考 邮箱、站内信，暂时定 选一个触发一次接口
-  // console.log({ zeroLog, displayLogTags, foo });
 
   // 删除 tag
   // handleCloseTag = removedTag => {
@@ -105,10 +205,12 @@ const LogContext = ({ source, data }: { source: any; data: any }) => {
 
   return (
     <>
-      <LogContextHeader displayLogTags={displayLogTags} />
-      {map(logData, (item) => {
-        <LogContextRecord item={item} key={item} />;
-      })}
+      <LogContextHeader displayLogTags={displayLogTags} source={source} />
+      <div>
+        {map(logData, (item, index) => (
+          <LogContextRecord key={index} />
+        ))}
+      </div>
     </>
   );
 };

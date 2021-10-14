@@ -1,0 +1,21 @@
+.log-time-chart {
+  .dc-dashboard-content {
+    padding: 0;
+    height: 100%;
+
+    .dc-dashboard-grid-wp,
+    .react-grid-layout,
+    .react-grid-layout > div,
+    .dc-view-wrapper {
+      height: 100% !important;
+    }
+
+    .dc-view-wrapper {
+      border-width: 0;
+
+      .dc-chart {
+        padding: 0;
+      }
+    }
+  }
+}
