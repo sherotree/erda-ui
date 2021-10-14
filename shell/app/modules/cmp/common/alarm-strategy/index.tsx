@@ -118,6 +118,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     editingRules: [] as any,
     editingFormRule: {},
     activedGroupId: undefined,
+    triggerConditions: [],
     triggerConditionKey: null,
     triggerConditionOperator: null,
     triggerConditionValue: null,
@@ -341,8 +342,9 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     },
   ];
 
-  const TriggerConditionSelect = () => {
-    const selectedTrigger = mockTriggerConditions.data.find((x) => x?.key === state.triggerConditionKey);
+  const TriggerConditionSelect = ({ id }) => {
+    const current = state.triggerConditions.find((x) => x.id === id);
+    const selectedTrigger = mockTriggerConditions.data.find((x) => x?.key === current?.triggerConditionKey);
     const triggerOperators = selectedTrigger?.operators || [];
     const triggerOptions = selectedTrigger?.options || [];
 
@@ -350,14 +352,10 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       <div className="flex">
         <Select
           className="mr-8"
-          value={state.triggerConditionKey}
-          onSelect={(value) =>
-            update({
-              triggerConditionKey: value,
-              triggerConditionValue: null,
-              triggerConditionOperator: null,
-            })
-          }
+          value={current?.triggerConditionKey}
+          onSelect={(value) => {
+            handleEditTriggerConditions(id, { key: 'triggerConditionKey', value });
+          }}
         >
           {map(mockTriggerConditions.data, (item) => {
             return (
@@ -369,8 +367,8 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
         </Select>
         <Select
           className="mr-8"
-          value={state.triggerConditionOperator}
-          onSelect={(value) => updater.triggerConditionOperator(value)}
+          value={current?.triggerConditionOperator}
+          onSelect={(value) => handleEditTriggerConditions(id, { key: 'triggerConditionOperator', value })}
         >
           {map(triggerOperators, (item) => {
             return (
@@ -380,7 +378,10 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
             );
           })}
         </Select>
-        <Select value={state.triggerConditionValue} onSelect={(value) => updater.triggerConditionValue(value)}>
+        <Select
+          value={current?.triggerConditionValue}
+          onSelect={(value) => handleEditTriggerConditions(id, { key: 'triggerConditionValue', value })}
+        >
           {map(triggerOptions, (item) => {
             return (
               <Option key={item?.key} value={item?.key}>
@@ -473,7 +474,20 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     {
       label: i18n.d('触发条件'),
       name: 'triggerConditions',
-      getComp: () => TriggerConditionSelect(),
+      getComp: () => (
+        <>
+          <Button
+            onClick={() => {
+              handleAddTriggerConditions();
+            }}
+          >
+            +
+          </Button>
+          {state.triggerConditions.map((item) => (
+            <TriggerConditionSelect key={item.id} id={item.id} />
+          ))}
+        </>
+      ),
     },
     {
       label: i18n.t('org:alarm rule'),
@@ -676,14 +690,42 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     updater.editingRules(rules);
   };
 
+  // 添加单条触发条件
+  const handleAddTriggerConditions = () => {
+    updater.triggerConditions([
+      {
+        id: uniqueId(),
+        triggerConditionKey: null,
+        triggerConditionOperator: null,
+        triggerConditionValue: null,
+      },
+      ...state.triggerConditions,
+    ]);
+  };
+
+  // 移除表格编辑中的规则
+  const handleRemoveTriggerConditions = (id: string) => {
+    updater.triggerConditions(filter(state.triggerConditions, (item) => item.id !== id));
+  };
+
+  // 编辑单条触发条件
+  const handleEditTriggerConditions = (id: string, item: { key: string; value: any }) => {
+    const rules = cloneDeep(state.triggerConditions);
+    const rule = find(rules, { id });
+    const index = findIndex(rules, { id });
+
+    fill(rules, { id, ...rule, [item.key]: item.value }, index, index + 1);
+    updater.triggerConditions(rules);
+  };
+
   // 编辑单条规则下的指标
-  const handleEditEditingRuleField = (key: string, index: number, item: { key: string; value: any }) => {
+  const handleEditEditingRuleField = (id: string, index: number, item: { key: string; value: any }) => {
     const rules = cloneDeep(state.editingRules);
-    const { functions } = find(rules, { key });
+    const { functions } = find(rules, { id });
     const functionItem = functions[index];
 
     fill(functions, { ...functionItem, [item.key]: item.value }, index, index + 1);
-    handleEditEditingRule(key, { key: 'functions', value: functions });
+    handleEditEditingRule(id, { key: 'functions', value: functions });
   };
 
   const handleDeleteAlarm = (id: number) => {
