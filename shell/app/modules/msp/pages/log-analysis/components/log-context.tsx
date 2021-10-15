@@ -17,10 +17,14 @@ import { Popover, Tag, Dropdown, Select, Button, Input, Menu, Switch } from 'cor
 import { CloseSmall as IconCloseSmall, SettingTwo as IconSettingTwo } from '@icon-park/react';
 import i18n from 'i18n';
 import mspStore from 'msp/stores/micro-service';
-import { find, map } from 'lodash';
+import { last, map } from 'lodash';
 
 const { Group: ButtonGroup } = Button;
 const { Option } = Select;
+
+const INITIAL = 'INITIAL';
+const BEFORE = 'BEFORE';
+const AFTER = 'AFTER';
 
 const Item: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ children, ...rest }) => {
   return (
@@ -29,12 +33,11 @@ const Item: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ children, ...res
     </div>
   );
 };
-const LogContextHeader = ({ displayLogTags, source }) => {
+const LogContextHeader = ({ displayLogTags, source, handleBefore, handleAfter }) => {
   const tagOptions = map(source.tags, (value, key) => {
-    console.log({ value, key }, 111);
     return <Option value={key} key={key}>{`${key}: ${value}`}</Option>;
   });
-  console.log({ tagOptions });
+
   const [visible, setVisible] = React.useState(false);
   const handleDisplayChange = (checked: boolean, record: LOG_ANALYTICS.IField) => {
     // const newField = produce(data, (draft) => {
@@ -132,13 +135,13 @@ const LogContextHeader = ({ displayLogTags, source }) => {
       </div>
       <div className="flex">
         <ButtonGroup className="download-btn-group mb-4">
-          <Button size="small" onClick={() => '更早'}>
+          <Button size="small" onClick={handleBefore}>
             更早
           </Button>
           <Button size="small" onClick={() => '当前日志'}>
             当前日志
           </Button>
-          <Button size="small" onClick={() => '更新'}>
+          <Button size="small" onClick={handleAfter}>
             更新
           </Button>
         </ButtonGroup>
@@ -151,14 +154,14 @@ const LogContextHeader = ({ displayLogTags, source }) => {
   );
 };
 
-const LogContextRecord = () => {
+const LogContextRecord = ({ item, isActive, order }) => {
   return (
-    <div className="flex">
-      <div className="mr-4">1</div>
+    <div className="flex" style={{ background: isActive ? 'green' : 'white' }}>
+      <div className="mr-4">{order}</div>
       <div className="mr-4">2021-10-10 12:30:89</div>
       <div>
         <Tag>标签</Tag>
-        <div>neirong</div>
+        <div>{item.content}</div>
       </div>
     </div>
   );
@@ -168,23 +171,65 @@ const LogContext = ({ source, data }: { source: any; data: any }) => {
   const clusterName = mspStore.useStore((s) => s.clusterName);
   const [displayLogTags, setDisplayLogTags] = React.useState([] as any);
   const defaultLogTags = ['application_name', 'service_name', 'pod_name'];
-  const [logData, setLogData] = React.useState([]);
+  const [logData, setLogData] = React.useState([]) as any[];
   const { getLogAnalyticContext } = mspLogAnalyticsStore.effects;
   const foo = [] as any;
+  const [current, setCurrent] = React.useState(source);
+  const [usedIds, setUsedIds] = React.useState(new Set());
+  const [operate, setOperate] = React.useState(INITIAL); // 'INITIAL', 'BEFORE', 'AFTER'
+  const [sort, setSort] = React.useState('asc');
+
+  const activeIndex = logData.findIndex(
+    (x) =>
+      x?.source?._id === source._id &&
+      x?.source?.offset === source.offset &&
+      x?.source?.timestampNanos === source.timestampNanos,
+  );
+
+  // React.useEffect(() => {
+  //   const { timestampNanos, id, offset } = source;
+  //   // TODO: 进来初始数据，应该0号前后是有数据的
+  //   getLogAnalyticContext({
+  //     timestampNanos,
+  //     id,
+  //     offset,
+  //     sort: 'asc',
+  //     query: '',
+  //     clusterName,
+  //     count: 20,
+  //   }).then((content) => setLogData(content));
+  // }, []);
 
   React.useEffect(() => {
-    const { timestampNanos, id, offset } = source;
-    // TODO: 进来初始数据，应该0号前后是有数据的
     getLogAnalyticContext({
-      timestampNanos,
-      id,
-      offset,
-      sort: 'asc',
+      timestampNanos: current.timestampNanos,
+      id: current._id,
+      offset: current.offset,
+      sort,
       query: '',
       clusterName,
       count: 20,
-    }).then((content) => setLogData(content));
-  }, []);
+    }).then((content) => {
+      if (usedIds.has(`${current._id}_${sort}`)) {
+        return;
+      }
+
+      if (operate === INITIAL) {
+        setLogData([{ source }, ...content]);
+      }
+      if (operate === BEFORE) {
+        setLogData((pre: any) => [...content, ...pre]);
+        setSort('desc');
+      }
+      if (operate === AFTER) {
+        setLogData((pre: any) => [...pre, ...content]);
+        setSort('asc');
+      }
+
+      usedIds.add(`${current._id}_${sort}`);
+      setUsedIds(usedIds);
+    });
+  }, [current, sort]);
 
   React.useEffect(() => {
     map(defaultLogTags, (item) => {
@@ -203,12 +248,35 @@ const LogContext = ({ source, data }: { source: any; data: any }) => {
   //   this.setState({ tags });
   // };
 
+  function handleBefore() {
+    setOperate(BEFORE);
+    setCurrent(logData?.[0]?.source);
+    setSort('desc');
+  }
+
+  function handleAfter() {
+    setOperate(AFTER);
+    const lastItem = last(logData) as any;
+    setCurrent(lastItem?.source);
+    setSort('asc');
+  }
+
   return (
     <>
-      <LogContextHeader displayLogTags={displayLogTags} source={source} />
+      <LogContextHeader
+        displayLogTags={displayLogTags}
+        source={source}
+        handleBefore={handleBefore}
+        handleAfter={handleAfter}
+      />
       <div>
         {map(logData, (item, index) => (
-          <LogContextRecord key={index} />
+          <LogContextRecord
+            item={item.source}
+            key={item.source._id}
+            isActive={activeIndex === index}
+            order={index - activeIndex}
+          />
         ))}
       </div>
     </>
