@@ -18,7 +18,8 @@ import { CloseSmall as IconCloseSmall, SettingTwo as IconSettingTwo } from '@ico
 import i18n from 'i18n';
 import { LOGIC_OPERATOR } from 'msp/pages/log-analysis/components/constants';
 import mspStore from 'msp/stores/micro-service';
-import { last, map } from 'lodash';
+import { last, map, throttle } from 'lodash';
+import './log-context.scss';
 
 const { Group: ButtonGroup } = Button;
 const { Option } = Select;
@@ -205,6 +206,7 @@ const LogContextRecord = ({ item, isActive, order }) => {
 const LogContext = ({ source, data }: { source: any; data: any }) => {
   const zeroLog = data.find((item) => item.source._id === source._id);
   const clusterName = mspStore.useStore((s) => s.clusterName);
+  const ref = React.useRef();
 
   const [logData, setLogData] = React.useState([]) as any[];
   const { getLogAnalyticContext } = mspLogAnalyticsStore.effects;
@@ -214,6 +216,22 @@ const LogContext = ({ source, data }: { source: any; data: any }) => {
   const [sort, setSort] = React.useState('asc');
 
   const activeIndex = logData.findIndex((x) => x?.source?._id === source._id);
+
+  function onScroll() {
+    const { scrollTop, scrollHeight, clientHeight } = ref.current;
+
+    // 滚动到top的时候
+    if (scrollTop < 10) {
+      handleBefore();
+    }
+
+    // 滚动到底部的时候
+    if (scrollHeight - scrollTop - clientHeight < 10) {
+      handleAfter();
+    }
+  }
+
+  const throttleScroll = throttle(onScroll, 100);
 
   React.useEffect(() => {
     getLogAnalyticContext({
@@ -272,7 +290,7 @@ const LogContext = ({ source, data }: { source: any; data: any }) => {
   return (
     <>
       <LogContextHeader zeroLog={zeroLog} source={source} handleBefore={handleBefore} handleAfter={handleAfter} />
-      <div>
+      <div className="log-context-wrapper" ref={ref} onScroll={throttleScroll}>
         {map(logData, (item, index) => (
           <LogContextRecord
             item={item.source}

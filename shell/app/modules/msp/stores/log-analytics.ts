@@ -75,7 +75,6 @@ const mspLogAnalyticsStore = createStore({
       const { addonId } = getParams();
       const props = await call(getLogAnalyticContext, { addon: addonId, ...payload });
       const { data } = props;
-      console.log({ data, props });
       return data;
     },
     async getAggregation(
