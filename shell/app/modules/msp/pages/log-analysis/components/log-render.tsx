@@ -440,7 +440,14 @@ const LogRender = ({ data, renderIndex, queryString, onFieldSelect, showTags, fi
       })}
       <Spotlight visible={visible} target={ref.current} onVisibleChange={setVisible} />
       {isLogModalVisible && (
-        <Modal width={1000} visible onCancel={() => setIsLogModalVisible(false)} footer={null} title="上下文浏览">
+        <Modal
+          width={1000}
+          visible
+          bodyStyle={{ height: '80vh', overflow: 'auto' }}
+          onCancel={() => setIsLogModalVisible(false)}
+          footer={null}
+          title="上下文浏览"
+        >
           <LogContext source={viewLogSource} data={data} />
         </Modal>
       )}

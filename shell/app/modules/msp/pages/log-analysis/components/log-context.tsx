@@ -16,6 +16,7 @@ import mspLogAnalyticsStore from 'msp/stores/log-analytics';
 import { Popover, Tag, Dropdown, Select, Button, Input, Menu, Switch } from 'core/nusi';
 import { CloseSmall as IconCloseSmall, SettingTwo as IconSettingTwo } from '@icon-park/react';
 import i18n from 'i18n';
+import { LOGIC_OPERATOR } from 'msp/pages/log-analysis/components/constants';
 import mspStore from 'msp/stores/micro-service';
 import { last, map } from 'lodash';
 
@@ -33,11 +34,22 @@ const Item: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ children, ...res
     </div>
   );
 };
-const LogContextHeader = ({ displayLogTags, source, handleBefore, handleAfter }) => {
+const LogContextHeader = ({ zeroLog, source, handleBefore, handleAfter }) => {
+  const [displayLogTags, setDisplayLogTags] = React.useState([] as any);
+  const defaultLogTags = ['application_name', 'service_name', 'pod_name'];
+  const [selectedTags, setSelectedTags] = React.useState(defaultLogTags);
   const tagOptions = map(source.tags, (value, key) => {
-    return <Option value={key} key={key}>{`${key}: ${value}`}</Option>;
+    return (
+      <Option value={key} key={key}>
+        {key}
+      </Option>
+    );
   });
-
+  // const displayLogTags = selectedTags.map((item) => 'ddd');
+  // const defaultSelectedValues = displayLogTags.map((item) => {
+  //   console.log(1111)
+  //   return item?.tagKey;
+  // });
   const [visible, setVisible] = React.useState(false);
   const handleDisplayChange = (checked: boolean, record: LOG_ANALYTICS.IField) => {
     // const newField = produce(data, (draft) => {
@@ -49,6 +61,19 @@ const LogContextHeader = ({ displayLogTags, source, handleBefore, handleAfter })
     // window.localStorage.setItem(addonId, JSON.stringify(newField));
     // updateShowTags(newField);
   };
+
+  React.useEffect(() => {
+    map(defaultLogTags, (item) => {
+      if (item in zeroLog.source.tags) {
+        displayLogTags.push({ tagKey: `${item}`, tagName: zeroLog.source.tags[item] });
+      }
+    });
+    setDisplayLogTags(displayLogTags);
+  }, []);
+
+  React.useEffect(() => {
+    console.log(selectedTags, 77);
+  }, [selectedTags]);
 
   const menu = React.useMemo(() => {
     return (
@@ -100,6 +125,7 @@ const LogContextHeader = ({ displayLogTags, source, handleBefore, handleAfter })
       </Menu>
     );
   }, []);
+
   return (
     <>
       <div className="flex">
@@ -111,7 +137,17 @@ const LogContextHeader = ({ displayLogTags, source, handleBefore, handleAfter })
             </Tag>
           ))}
         </div>
-        <Select mode="multiple" allowClear style={{ width: 400 }} placeholder="选择标签" onChange={() => {}}>
+        <Select
+          value={selectedTags}
+          defaultValue={defaultLogTags}
+          mode="multiple"
+          allowClear
+          style={{ width: 400 }}
+          placeholder="选择标签"
+          onChange={(value) => {
+            setSelectedTags(value);
+          }}
+        >
           {tagOptions}
         </Select>
         <Dropdown
@@ -169,47 +205,27 @@ const LogContextRecord = ({ item, isActive, order }) => {
 const LogContext = ({ source, data }: { source: any; data: any }) => {
   const zeroLog = data.find((item) => item.source._id === source._id);
   const clusterName = mspStore.useStore((s) => s.clusterName);
-  const [displayLogTags, setDisplayLogTags] = React.useState([] as any);
-  const defaultLogTags = ['application_name', 'service_name', 'pod_name'];
+
   const [logData, setLogData] = React.useState([]) as any[];
   const { getLogAnalyticContext } = mspLogAnalyticsStore.effects;
-  const foo = [] as any;
   const [current, setCurrent] = React.useState(source);
   const [usedIds, setUsedIds] = React.useState(new Set());
   const [operate, setOperate] = React.useState(INITIAL); // 'INITIAL', 'BEFORE', 'AFTER'
   const [sort, setSort] = React.useState('asc');
 
-  const activeIndex = logData.findIndex(
-    (x) =>
-      x?.source?._id === source._id &&
-      x?.source?.offset === source.offset &&
-      x?.source?.timestampNanos === source.timestampNanos,
-  );
-
-  // React.useEffect(() => {
-  //   const { timestampNanos, id, offset } = source;
-  //   // TODO: 进来初始数据，应该0号前后是有数据的
-  //   getLogAnalyticContext({
-  //     timestampNanos,
-  //     id,
-  //     offset,
-  //     sort: 'asc',
-  //     query: '',
-  //     clusterName,
-  //     count: 20,
-  //   }).then((content) => setLogData(content));
-  // }, []);
+  const activeIndex = logData.findIndex((x) => x?.source?._id === source._id);
 
   React.useEffect(() => {
     getLogAnalyticContext({
       timestampNanos: current.timestampNanos,
-      id: current._id,
+      id: current.id,
       offset: current.offset,
       sort,
       query: '',
       clusterName,
       count: 20,
-    }).then((content) => {
+    }).then((res) => {
+      const content = res || [];
       if (usedIds.has(`${current._id}_${sort}`)) {
         return;
       }
@@ -231,14 +247,6 @@ const LogContext = ({ source, data }: { source: any; data: any }) => {
     });
   }, [current, sort]);
 
-  React.useEffect(() => {
-    map(defaultLogTags, (item) => {
-      if (item in zeroLog.source.tags) {
-        foo.push({ tagKey: `tags.${item}`, tagName: zeroLog.source.tags[item] });
-      }
-    });
-    setDisplayLogTags(foo);
-  }, []);
   // TODO: 标签 XX 参考 邮箱、站内信，暂时定 选一个触发一次接口
 
   // 删除 tag
@@ -263,12 +271,7 @@ const LogContext = ({ source, data }: { source: any; data: any }) => {
 
   return (
     <>
-      <LogContextHeader
-        displayLogTags={displayLogTags}
-        source={source}
-        handleBefore={handleBefore}
-        handleAfter={handleAfter}
-      />
+      <LogContextHeader zeroLog={zeroLog} source={source} handleBefore={handleBefore} handleAfter={handleAfter} />
       <div>
         {map(logData, (item, index) => (
           <LogContextRecord
