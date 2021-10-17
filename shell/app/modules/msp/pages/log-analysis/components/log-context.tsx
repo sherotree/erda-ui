@@ -14,11 +14,18 @@
 import React from 'react';
 import mspLogAnalyticsStore from 'msp/stores/log-analytics';
 import { Popover, Tag, Dropdown, Select, Button, Input, Menu, Switch } from 'core/nusi';
-import { CloseSmall as IconCloseSmall, SettingTwo as IconSettingTwo } from '@icon-park/react';
+import {
+  CloseSmall as IconCloseSmall,
+  SettingTwo as IconSettingTwo,
+  Down as IconDown,
+  Right as IconRight,
+} from '@icon-park/react';
 import i18n from 'i18n';
 import { LOGIC_OPERATOR } from 'msp/pages/log-analysis/components/constants';
+import { formatTime } from 'common/utils';
+import { produce } from 'immer';
 import mspStore from 'msp/stores/micro-service';
-import { last, map, throttle } from 'lodash';
+import { last, map, throttle, forEach, filter } from 'lodash';
 import './log-context.scss';
 
 const { Group: ButtonGroup } = Button;
@@ -35,10 +42,21 @@ const Item: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ children, ...res
     </div>
   );
 };
-const LogContextHeader = ({ zeroLog, source, handleBefore, handleAfter }) => {
-  const [displayLogTags, setDisplayLogTags] = React.useState([] as any);
+const LogContextHeader = ({
+  zeroLog,
+  source,
+  handleBefore,
+  handleAfter,
+  handleQuery,
+  scrollToActive,
+  contextFields,
+  setContextFields,
+}) => {
   const defaultLogTags = ['application_name', 'service_name', 'pod_name'];
   const [selectedTags, setSelectedTags] = React.useState(defaultLogTags);
+  const [filters, setFilters] = React.useState([] as string[]);
+  const displayTags = [] as Array<{ tagKey: string; tagName: string }>;
+  const queryArr = [] as string[];
   const tagOptions = map(source.tags, (value, key) => {
     return (
       <Option value={key} key={key}>
@@ -46,35 +64,33 @@ const LogContextHeader = ({ zeroLog, source, handleBefore, handleAfter }) => {
       </Option>
     );
   });
-  // const displayLogTags = selectedTags.map((item) => 'ddd');
-  // const defaultSelectedValues = displayLogTags.map((item) => {
-  //   console.log(1111)
-  //   return item?.tagKey;
-  // });
   const [visible, setVisible] = React.useState(false);
   const handleDisplayChange = (checked: boolean, record: LOG_ANALYTICS.IField) => {
-    // const newField = produce(data, (draft) => {
-    //   if (draft) {
-    //     const target = draft.find(t => t.fieldName === record.fieldName);
-    //     target.display = checked;
-    //   }
-    // });
-    // window.localStorage.setItem(addonId, JSON.stringify(newField));
-    // updateShowTags(newField);
-  };
-
-  React.useEffect(() => {
-    map(defaultLogTags, (item) => {
-      if (item in zeroLog.source.tags) {
-        displayLogTags.push({ tagKey: `${item}`, tagName: zeroLog.source.tags[item] });
+    const newField = produce(contextFields, (draft) => {
+      if (draft) {
+        const target = draft.find((t) => t.fieldName === record.fieldName);
+        target.display = checked;
       }
     });
-    setDisplayLogTags(displayLogTags);
-  }, []);
+    setContextFields(newField);
+  };
+
+  forEach(selectedTags, (item) => {
+    if (item in zeroLog.source.tags) {
+      displayTags.push({ tagKey: `${item}`, tagName: zeroLog.source.tags[item] });
+      queryArr.push(`tags.${item}: "${zeroLog.source.tags[item]}"`);
+    }
+  });
 
   React.useEffect(() => {
-    console.log(selectedTags, 77);
+    handleQuery(queryArr.join(' AND '));
   }, [selectedTags]);
+
+  // 删除 tag
+  function handleCloseTag(removedTag) {
+    const foo = selectedTags.filter((item) => item !== removedTag);
+    setSelectedTags(foo);
+  }
 
   const menu = React.useMemo(() => {
     return (
@@ -102,8 +118,8 @@ const LogContextHeader = ({ zeroLog, source, handleBefore, handleAfter }) => {
           </Item>
         </Menu.Item>
         <Menu.Divider />
-        <div className="max-h-48 overflow-y-auto" data-l={[]?.length}>
-          {[]?.map((item) => {
+        <div className="max-h-48 overflow-y-auto">
+          {contextFields?.map((item) => {
             return (
               <>
                 <Menu.Item className="cursor-default ant-dropdown-menu-item ant-dropdown-menu-item-only-child">
@@ -125,14 +141,23 @@ const LogContextHeader = ({ zeroLog, source, handleBefore, handleAfter }) => {
         </div>
       </Menu>
     );
-  }, []);
+  }, [contextFields]);
 
+  console.log({ filters });
   return (
     <>
       <div className="flex">
         <div>
-          {displayLogTags.map((item) => (
-            <Tag closable className="mr-4 text-xs" onClose={() => handleCloseTag()} color="#999999" key={item.tagKey}>
+          {displayTags.map((item) => (
+            <Tag
+              closable
+              className="mr-4 text-xs"
+              onClose={() => {
+                handleCloseTag(item.tagKey);
+              }}
+              color="#999999"
+              key={item.tagKey}
+            >
               <span className="mr-2">{item.tagKey}:</span>
               <span>{item.tagName}</span>
             </Tag>
@@ -142,12 +167,14 @@ const LogContextHeader = ({ zeroLog, source, handleBefore, handleAfter }) => {
           value={selectedTags}
           defaultValue={defaultLogTags}
           mode="multiple"
+          showSearch
           allowClear
           style={{ width: 400 }}
           placeholder="选择标签"
           onChange={(value) => {
             setSelectedTags(value);
           }}
+          filterOption={(input, option) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
         >
           {tagOptions}
         </Select>
@@ -175,7 +202,7 @@ const LogContextHeader = ({ zeroLog, source, handleBefore, handleAfter }) => {
           <Button size="small" onClick={handleBefore}>
             更早
           </Button>
-          <Button size="small" onClick={() => '当前日志'}>
+          <Button size="small" onClick={scrollToActive}>
             当前日志
           </Button>
           <Button size="small" onClick={handleAfter}>
@@ -184,35 +211,26 @@ const LogContextHeader = ({ zeroLog, source, handleBefore, handleAfter }) => {
         </ButtonGroup>
         <div>
           <span>过滤条件:</span>
-          <Input className="w-16" />
+          <Input className="w-16" onPressEnter={(e) => setFilters([...filters, e.target.value])} />
         </div>
       </div>
     </>
   );
 };
 
-const LogContextRecord = ({ item, isActive, order }) => {
-  return (
-    <div className="flex" style={{ background: isActive ? 'green' : 'white' }}>
-      <div className="mr-4">{order}</div>
-      <div className="mr-4">2021-10-10 12:30:89</div>
-      <div>
-        <Tag>标签</Tag>
-        <div>{item.content}</div>
-      </div>
-    </div>
-  );
-};
-const LogContext = ({ source, data }: { source: any; data: any }) => {
+const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
   const zeroLog = data.find((item) => item.source._id === source._id);
   const clusterName = mspStore.useStore((s) => s.clusterName);
   const ref = React.useRef();
-
+  const activeRef = React.useRef();
+  const [query, setQuery] = React.useState('');
   const [logData, setLogData] = React.useState([]) as any[];
   const { getLogAnalyticContext } = mspLogAnalyticsStore.effects;
   const [current, setCurrent] = React.useState(source);
   const [usedIds, setUsedIds] = React.useState(new Set());
   const [operate, setOperate] = React.useState(INITIAL); // 'INITIAL', 'BEFORE', 'AFTER'
+  const [contextFields, setContextFields] = React.useState(fields);
+  const showTags = contextFields.filter((item) => item.display).map((item) => item.fieldName);
   const [sort, setSort] = React.useState('asc');
 
   const activeIndex = logData.findIndex((x) => x?.source?._id === source._id);
@@ -231,15 +249,100 @@ const LogContext = ({ source, data }: { source: any; data: any }) => {
     }
   }
 
-  const throttleScroll = throttle(onScroll, 100);
+  const LogContextContent = ({ content }) => {
+    const [isExpand, setIsExpand] = React.useState(false);
+    const isFoldContent = String(content).length > 1000;
+    const value = isFoldContent && !isExpand ? `${String(content).slice(0, 1000)} ...` : content;
+    return (
+      <span>
+        {isFoldContent && (
+          <span className="absolute -left-5">
+            {isExpand ? (
+              <>
+                <IconDown
+                  className="cursor-pointer"
+                  theme="outline"
+                  size="14"
+                  fill="currentColor"
+                  onClick={() => {
+                    setIsExpand(false);
+                  }}
+                />
+              </>
+            ) : (
+              <IconRight
+                className="cursor-pointer"
+                theme="outline"
+                size="14"
+                fill="#333"
+                onClick={() => {
+                  setIsExpand(true);
+                }}
+              />
+            )}
+          </span>
+        )}
+        {value}
+      </span>
+    );
+  };
 
+  const LogContextRecord = ({ item, isActive, order, showTags }) => {
+    const { tags, ...rest } = item;
+    return (
+      <div className="flex" ref={isActive ? activeRef : null} style={{ background: isActive ? 'green' : 'white' }}>
+        <div className="mr-4">{order}</div>
+        <div className="font-semibold text-xs leading-5">{formatTime(rest.timestamp, 'MM-DD HH:mm:ss')}</div>
+        <div>
+          <div className="flex flex-wrap flex-1">
+            {map(tags ?? {}, (tagName, tagKey) => {
+              const fieldName = `tags.${tagKey}`;
+              if (!showTags.includes(fieldName)) {
+                return null;
+              }
+              return (
+                <Popover
+                  content={
+                    <div>
+                      <span className="bg-cultured leading-5 font-medium">{fieldName}</span>:{' '}
+                      <span className="leading-5">{tagName}</span>
+                    </div>
+                  }
+                >
+                  <Tag className="mr-0 text-xs" color="#999999">
+                    {tagName}
+                  </Tag>
+                </Popover>
+              );
+            })}
+          </div>
+          {map(rest, (value, tag) => {
+            if (!showTags.includes(tag)) {
+              return null;
+            }
+
+            return (
+              <p className="text-xs leading-5 relative">
+                <span className="bg-cultured leading-5 font-medium">{tag}</span>:{' '}
+                <span className="leading-5">
+                  <LogContextContent tag={tag} content={value} />
+                </span>
+              </p>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const throttleScroll = throttle(onScroll, 100);
   React.useEffect(() => {
     getLogAnalyticContext({
       timestampNanos: current.timestampNanos,
       id: current.id,
       offset: current.offset,
       sort,
-      query: '',
+      query,
       clusterName,
       count: 20,
     }).then((res) => {
@@ -263,16 +366,9 @@ const LogContext = ({ source, data }: { source: any; data: any }) => {
       usedIds.add(`${current._id}_${sort}`);
       setUsedIds(usedIds);
     });
-  }, [current, sort]);
+  }, [current, sort, query]);
 
   // TODO: 标签 XX 参考 邮箱、站内信，暂时定 选一个触发一次接口
-
-  // 删除 tag
-  // handleCloseTag = removedTag => {
-  //   const tags = this.state.tags.filter(tag => tag !== removedTag);
-  //   console.log(tags);
-  //   this.setState({ tags });
-  // };
 
   function handleBefore() {
     setOperate(BEFORE);
@@ -287,9 +383,22 @@ const LogContext = ({ source, data }: { source: any; data: any }) => {
     setSort('asc');
   }
 
+  function scrollToActive() {
+    activeRef.current.scrollIntoView();
+  }
+
   return (
     <>
-      <LogContextHeader zeroLog={zeroLog} source={source} handleBefore={handleBefore} handleAfter={handleAfter} />
+      <LogContextHeader
+        zeroLog={zeroLog}
+        source={source}
+        handleBefore={handleBefore}
+        handleAfter={handleAfter}
+        handleQuery={setQuery}
+        scrollToActive={scrollToActive}
+        contextFields={contextFields}
+        setContextFields={setContextFields}
+      />
       <div className="log-context-wrapper" ref={ref} onScroll={throttleScroll}>
         {map(logData, (item, index) => (
           <LogContextRecord
@@ -297,6 +406,7 @@ const LogContext = ({ source, data }: { source: any; data: any }) => {
             key={item.source._id}
             isActive={activeIndex === index}
             order={index - activeIndex}
+            showTags={showTags}
           />
         ))}
       </div>

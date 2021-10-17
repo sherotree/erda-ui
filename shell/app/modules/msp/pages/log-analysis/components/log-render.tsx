@@ -182,7 +182,6 @@ const LogItemToolBar = ({
           <IconLogSearch
             {...iconProps}
             onClick={() => {
-              console.log({ data }, 8899);
               onHandleLogModalVisible(data?.source);
             }}
           />
@@ -355,7 +354,6 @@ const LogRender = ({ data, renderIndex, queryString, onFieldSelect, showTags, fi
   const [visible, setVisible] = React.useState(false);
   const [isLogModalVisible, setIsLogModalVisible] = React.useState(false);
   const [viewLogSource, setViewLogSource] = React.useState({});
-  const [viewLogId, setViewLogId] = React.useState({});
   const ref = React.useRef<DOMRect>();
   const fieldsMap = React.useRef<Obj>({});
   React.useEffect(() => {
@@ -385,7 +383,6 @@ const LogRender = ({ data, renderIndex, queryString, onFieldSelect, showTags, fi
   );
 
   const handleLogModalVisible = (source: Omit<LOG_ANALYTICS.LogItem, 'highlight'>) => {
-    console.log({ source });
     setIsLogModalVisible(true);
     setViewLogSource(source);
   };
@@ -448,7 +445,7 @@ const LogRender = ({ data, renderIndex, queryString, onFieldSelect, showTags, fi
           footer={null}
           title="上下文浏览"
         >
-          <LogContext source={viewLogSource} data={data} />
+          <LogContext source={viewLogSource} data={data} fields={fields} />
         </Modal>
       )}
     </div>
