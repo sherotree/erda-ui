@@ -13,210 +13,17 @@
 
 import React from 'react';
 import mspLogAnalyticsStore from 'msp/stores/log-analytics';
-import { Popover, Tag, Dropdown, Select, Button, Input, Menu, Switch } from 'core/nusi';
-import {
-  CloseSmall as IconCloseSmall,
-  SettingTwo as IconSettingTwo,
-  Down as IconDown,
-  Right as IconRight,
-} from '@icon-park/react';
-import i18n from 'i18n';
-import { LOGIC_OPERATOR } from 'msp/pages/log-analysis/components/constants';
+import { Popover, Tag } from 'core/nusi';
 import { formatTime } from 'common/utils';
-import { produce } from 'immer';
 import mspStore from 'msp/stores/micro-service';
-import { last, map, throttle, forEach, filter } from 'lodash';
+import { last, map, throttle } from 'lodash';
 import './log-context.scss';
-
-const { Group: ButtonGroup } = Button;
-const { Option } = Select;
+import { LogContextHeader } from './log-context-header';
+import { LogContextContent } from './log-context-content';
 
 const INITIAL = 'INITIAL';
 const BEFORE = 'BEFORE';
 const AFTER = 'AFTER';
-
-const Item: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ children, ...rest }) => {
-  return (
-    <div {...rest} className="flex justify-between items-center" onClick={(e) => e.stopPropagation()}>
-      {children}
-    </div>
-  );
-};
-const LogContextHeader = ({
-  zeroLog,
-  source,
-  handleBefore,
-  handleAfter,
-  handleQuery,
-  scrollToActive,
-  contextFields,
-  setContextFields,
-}) => {
-  const defaultLogTags = ['application_name', 'service_name', 'pod_name'];
-  const [selectedTags, setSelectedTags] = React.useState(defaultLogTags);
-  const [filters, setFilters] = React.useState([] as string[]);
-  const displayTags = [] as Array<{ tagKey: string; tagName: string }>;
-  const queryArr = [] as string[];
-  const tagOptions = map(source.tags, (value, key) => {
-    return (
-      <Option value={key} key={key}>
-        {key}
-      </Option>
-    );
-  });
-  const [visible, setVisible] = React.useState(false);
-  const handleDisplayChange = (checked: boolean, record: LOG_ANALYTICS.IField) => {
-    const newField = produce(contextFields, (draft) => {
-      if (draft) {
-        const target = draft.find((t) => t.fieldName === record.fieldName);
-        target.display = checked;
-      }
-    });
-    setContextFields(newField);
-  };
-
-  forEach(selectedTags, (item) => {
-    if (item in zeroLog.source.tags) {
-      displayTags.push({ tagKey: `${item}`, tagName: zeroLog.source.tags[item] });
-      queryArr.push(`tags.${item}: "${zeroLog.source.tags[item]}"`);
-    }
-  });
-
-  React.useEffect(() => {
-    handleQuery(queryArr.join(' AND '));
-  }, [selectedTags]);
-
-  // 删除 tag
-  function handleCloseTag(removedTag) {
-    const foo = selectedTags.filter((item) => item !== removedTag);
-    setSelectedTags(foo);
-  }
-
-  const menu = React.useMemo(() => {
-    return (
-      <Menu>
-        <Menu.Item className="cursor-default">
-          <Item>
-            <div className="font-semibold">{i18n.t('msp:display setting')}</div>
-            <span className="hover:text-primary">
-              <IconCloseSmall
-                className="cursor-pointer"
-                theme="filled"
-                size="24"
-                fill="currentColor"
-                onClick={() => {
-                  setVisible(false);
-                }}
-              />
-            </span>
-          </Item>
-        </Menu.Item>
-        <Menu.Item className="cursor-default">
-          <Item>
-            <div className="text-darkgray">{i18n.t('field')}</div>
-            <div className="text-darkgray">{i18n.t('msp:show')}</div>
-          </Item>
-        </Menu.Item>
-        <Menu.Divider />
-        <div className="max-h-48 overflow-y-auto">
-          {contextFields?.map((item) => {
-            return (
-              <>
-                <Menu.Item className="cursor-default ant-dropdown-menu-item ant-dropdown-menu-item-only-child">
-                  <Item>
-                    <div>{item.fieldName}</div>
-                    <Switch
-                      size="small"
-                      checked={item.display}
-                      onChange={(checked) => {
-                        handleDisplayChange(checked, item);
-                      }}
-                    />
-                  </Item>
-                </Menu.Item>
-                <Menu.Divider className="ant-dropdown-menu-item-divider" />
-              </>
-            );
-          })}
-        </div>
-      </Menu>
-    );
-  }, [contextFields]);
-
-  console.log({ filters });
-  return (
-    <>
-      <div className="flex">
-        <div>
-          {displayTags.map((item) => (
-            <Tag
-              closable
-              className="mr-4 text-xs"
-              onClose={() => {
-                handleCloseTag(item.tagKey);
-              }}
-              color="#999999"
-              key={item.tagKey}
-            >
-              <span className="mr-2">{item.tagKey}:</span>
-              <span>{item.tagName}</span>
-            </Tag>
-          ))}
-        </div>
-        <Select
-          value={selectedTags}
-          defaultValue={defaultLogTags}
-          mode="multiple"
-          showSearch
-          allowClear
-          style={{ width: 400 }}
-          placeholder="选择标签"
-          onChange={(value) => {
-            setSelectedTags(value);
-          }}
-          filterOption={(input, option) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
-        >
-          {tagOptions}
-        </Select>
-        <Dropdown
-          visible={visible}
-          onVisibleChange={setVisible}
-          overlayClassName="w-64"
-          trigger={['click']}
-          overlay={menu}
-        >
-          <Button
-            size="small"
-            className="flex items-center cursor-pointer ml-2"
-            onClick={() => {
-              setVisible(true);
-            }}
-          >
-            <IconSettingTwo theme="outline" size="14" fill="currentColor" />
-            {i18n.t('setting')}
-          </Button>
-        </Dropdown>
-      </div>
-      <div className="flex">
-        <ButtonGroup className="download-btn-group mb-4">
-          <Button size="small" onClick={handleBefore}>
-            更早
-          </Button>
-          <Button size="small" onClick={scrollToActive}>
-            当前日志
-          </Button>
-          <Button size="small" onClick={handleAfter}>
-            更新
-          </Button>
-        </ButtonGroup>
-        <div>
-          <span>过滤条件:</span>
-          <Input className="w-16" onPressEnter={(e) => setFilters([...filters, e.target.value])} />
-        </div>
-      </div>
-    </>
-  );
-};
 
 const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
   const zeroLog = data.find((item) => item.source._id === source._id);
@@ -232,8 +39,10 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
   const [contextFields, setContextFields] = React.useState(fields);
   const showTags = contextFields.filter((item) => item.display).map((item) => item.fieldName);
   const [sort, setSort] = React.useState('asc');
+  const [filters, setFilters] = React.useState([] as string[]);
 
   const activeIndex = logData.findIndex((x) => x?.source?._id === source._id);
+  const foo = ['source', 'id', 'stream', 'content', 'uniId'];
 
   function onScroll() {
     const { scrollTop, scrollHeight, clientHeight } = ref.current;
@@ -248,44 +57,6 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
       handleAfter();
     }
   }
-
-  const LogContextContent = ({ content }) => {
-    const [isExpand, setIsExpand] = React.useState(false);
-    const isFoldContent = String(content).length > 1000;
-    const value = isFoldContent && !isExpand ? `${String(content).slice(0, 1000)} ...` : content;
-    return (
-      <span>
-        {isFoldContent && (
-          <span className="absolute -left-5">
-            {isExpand ? (
-              <>
-                <IconDown
-                  className="cursor-pointer"
-                  theme="outline"
-                  size="14"
-                  fill="currentColor"
-                  onClick={() => {
-                    setIsExpand(false);
-                  }}
-                />
-              </>
-            ) : (
-              <IconRight
-                className="cursor-pointer"
-                theme="outline"
-                size="14"
-                fill="#333"
-                onClick={() => {
-                  setIsExpand(true);
-                }}
-              />
-            )}
-          </span>
-        )}
-        {value}
-      </span>
-    );
-  };
 
   const LogContextRecord = ({ item, isActive, order, showTags }) => {
     const { tags, ...rest } = item;
@@ -398,17 +169,26 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
         scrollToActive={scrollToActive}
         contextFields={contextFields}
         setContextFields={setContextFields}
+        filters={filters}
+        setFilters={setFilters}
       />
       <div className="log-context-wrapper" ref={ref} onScroll={throttleScroll}>
-        {map(logData, (item, index) => (
-          <LogContextRecord
-            item={item.source}
-            key={item.source._id}
-            isActive={activeIndex === index}
-            order={index - activeIndex}
-            showTags={showTags}
-          />
-        ))}
+        {map(logData, (item, index) => {
+          const show =
+            filters?.length === 0 || filters.every((filter) => foo.some((k) => item?.source?.[k]?.includes(filter)));
+
+          return (
+            show && (
+              <LogContextRecord
+                item={item.source}
+                key={item.source._id}
+                isActive={activeIndex === index}
+                order={index - activeIndex}
+                showTags={showTags}
+              />
+            )
+          );
+        })}
       </div>
     </>
   );
