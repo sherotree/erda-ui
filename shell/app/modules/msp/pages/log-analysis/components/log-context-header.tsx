@@ -13,7 +13,12 @@
 
 import React from 'react';
 import { Tag, Dropdown, Select, Button, Input, Menu, Switch } from 'core/nusi';
-import { CloseSmall as IconCloseSmall, FocusOne as IconFocusOne, Filter as IconFilter } from '@icon-park/react';
+import {
+  CloseSmall as IconCloseSmall,
+  FocusOne as IconFocusOne,
+  Filter as IconFilter,
+  Down as IconDown,
+} from '@icon-park/react';
 import i18n from 'i18n';
 import { produce } from 'immer';
 import { map, forEach } from 'lodash';
@@ -55,6 +60,7 @@ export const LogContextHeader = ({
     );
   });
   const [visible, setVisible] = React.useState(false);
+  const [visible2, setVisible2] = React.useState(false);
   const handleDisplayChange = (checked: boolean, record: LOG_ANALYTICS.IField) => {
     const newField = produce(contextFields, (draft) => {
       if (draft) {
@@ -78,6 +84,7 @@ export const LogContextHeader = ({
 
   function handleCloseTag(removedTag: string) {
     const foo = selectedTags.filter((item) => item !== removedTag);
+    console.log({ foo, removedTag, selectedTags });
     setSelectedTags(foo);
   }
 
@@ -132,9 +139,28 @@ export const LogContextHeader = ({
     );
   }, [contextFields]);
 
+  const bar = (
+    <Menu>
+      <div className="max-h-48 overflow-y-auto">
+        {map(
+          Object.keys(source.tags).filter((x) => !selectedTags.includes(x)),
+          (item) => (
+            <Menu.Item
+              className="p-2 cursor-pointer"
+              key={item}
+              onClick={() => setSelectedTags([...selectedTags, item])}
+            >
+              {item}
+            </Menu.Item>
+          ),
+        )}
+      </div>
+    </Menu>
+  );
+
   return (
     <>
-      <div className="flex">
+      <div className="flex justify-between">
         <div>
           {displayTags.map((item) => (
             <Tag
@@ -151,42 +177,48 @@ export const LogContextHeader = ({
             </Tag>
           ))}
         </div>
-        <Select
-          value={selectedTags}
-          defaultValue={defaultLogTags}
-          mode="multiple"
-          showSearch
-          allowClear
-          style={{ width: 400 }}
-          placeholder={i18n.d('选择标签')}
-          onChange={(value) => {
-            setSelectedTags(value);
-          }}
-          filterOption={(input, option) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
-        >
-          {tagOptions}
-        </Select>
-        <Dropdown
-          visible={visible}
-          onVisibleChange={setVisible}
-          overlayClassName="w-64"
-          trigger={['click']}
-          overlay={menu}
-        >
-          <Button
-            size="small"
-            className="flex items-center cursor-pointer ml-2"
-            onClick={() => {
-              setVisible(true);
-            }}
+
+        <div className="flex">
+          <Dropdown
+            visible={visible2}
+            onVisibleChange={setVisible2}
+            overlayClassName="w-64"
+            trigger={['click']}
+            overlay={bar}
           >
-            <span className="mr-1">{i18n.d('字段过滤')}</span>
-            <IconFilter theme="outline" size="14" fill="currentColor" />
-          </Button>
-        </Dropdown>
+            <Button
+              size="small"
+              className="flex items-center cursor-pointer ml-2"
+              onClick={() => {
+                setVisible2(true);
+              }}
+            >
+              <span className="mr-1">{i18n.d('标签选择')}</span>
+              <IconDown theme="outline" size="14" fill="currentColor" />
+            </Button>
+          </Dropdown>
+          <Dropdown
+            visible={visible}
+            onVisibleChange={setVisible}
+            overlayClassName="w-64"
+            trigger={['click']}
+            overlay={menu}
+          >
+            <Button
+              size="small"
+              className="flex items-center cursor-pointer ml-2"
+              onClick={() => {
+                setVisible(true);
+              }}
+            >
+              <span className="mr-1">{i18n.d('字段过滤')}</span>
+              <IconFilter theme="outline" size="14" fill="currentColor" />
+            </Button>
+          </Dropdown>
+        </div>
       </div>
-      <div className="flex">
-        <ButtonGroup className="mb-4">
+      <div className="flex mt-2 mb-4 items-center">
+        <ButtonGroup>
           <Button size="small" onClick={handleBefore}>
             {i18n.d('更早')}
           </Button>
@@ -198,10 +230,10 @@ export const LogContextHeader = ({
             {i18n.d('更新')}
           </Button>
         </ButtonGroup>
-        <div className="ml-4">
+        <div className="ml-4 flex items-center">
           <span className="mr-2">{i18n.d('过滤条件')}:</span>
           <Input
-            className="w-16"
+            className="w-40 mr-4"
             value={filterValue}
             onChange={(e) => setFilterValue(e.target.value)}
             onPressEnter={(e) => {
@@ -214,7 +246,8 @@ export const LogContextHeader = ({
           />
           {map(filters, (item) => (
             <Tag
-              onClick={() => {
+              closable
+              onClose={() => {
                 setFilters([...filters.filter((x) => x !== item)]);
               }}
             >

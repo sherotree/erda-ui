@@ -20,6 +20,7 @@ import { last, map, throttle } from 'lodash';
 import './log-context.scss';
 import { LogContextHeader } from './log-context-header';
 import { LogContextContent } from './log-context-content';
+import { useUpdate } from 'common';
 
 const INITIAL = 'INITIAL';
 const BEFORE = 'BEFORE';
@@ -30,15 +31,18 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
   const clusterName = mspStore.useStore((s) => s.clusterName);
   const ref = React.useRef();
   const activeRef = React.useRef();
-  const [query, setQuery] = React.useState('');
-  const [logData, setLogData] = React.useState([]) as any[];
+  const [{ logData, current, usedIds, operate, contextFields, sort, query }, updater, update] = useUpdate({
+    logData: [],
+    current: source,
+    usedIds: new Set(),
+    operate: INITIAL,
+    contextFields: fields,
+    sort: 'asc',
+    query: '',
+  });
+
   const { getLogAnalyticContext } = mspLogAnalyticsStore.effects;
-  const [current, setCurrent] = React.useState(source);
-  const [usedIds, setUsedIds] = React.useState(new Set());
-  const [operate, setOperate] = React.useState(INITIAL); // 'INITIAL', 'BEFORE', 'AFTER'
-  const [contextFields, setContextFields] = React.useState(fields);
   const showTags = contextFields.filter((item) => item.display).map((item) => item.fieldName);
-  const [sort, setSort] = React.useState('asc');
   const [filters, setFilters] = React.useState([] as string[]);
 
   const activeIndex = logData.findIndex((x) => x?.source?._id === source._id);
@@ -137,33 +141,33 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
       }
 
       if (operate === INITIAL) {
-        setLogData([{ source }, ...content]);
+        updater.logData([{ source }, ...content]);
       }
       if (operate === BEFORE) {
-        setLogData((pre: any) => [...content, ...pre]);
-        setSort('desc');
+        updater.logData([...content, ...logData]);
+        updater.sort('desc');
       }
       if (operate === AFTER) {
-        setLogData((pre: any) => [...pre, ...content]);
-        setSort('asc');
+        updater.logData([...logData, ...content]);
+        updater.sort('asc');
       }
 
       usedIds.add(`${current._id}_${sort}`);
-      setUsedIds(usedIds);
+      updater.usedIds(usedIds);
     });
   }, [current, sort, query]);
 
   function handleBefore() {
-    setOperate(BEFORE);
-    setCurrent(logData?.[0]?.source);
-    setSort('desc');
+    updater.operate(BEFORE);
+    updater.current(logData?.[0]?.source);
+    updater.sort('desc');
   }
 
   function handleAfter() {
-    setOperate(AFTER);
+    updater.operate(AFTER);
     const lastItem = last(logData) as any;
-    setCurrent(lastItem?.source);
-    setSort('asc');
+    updater.current(lastItem?.source);
+    updater.sort('asc');
   }
 
   function scrollToActive() {
@@ -177,10 +181,10 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
         source={source}
         handleBefore={handleBefore}
         handleAfter={handleAfter}
-        handleQuery={setQuery}
+        handleQuery={(value: string) => updater.query(value)}
         scrollToActive={scrollToActive}
         contextFields={contextFields}
-        setContextFields={setContextFields}
+        setContextFields={(value: any) => updater.contextFields(value)}
         filters={filters}
         setFilters={setFilters}
       />
