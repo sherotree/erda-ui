@@ -13,7 +13,7 @@
 
 import React from 'react';
 import mspLogAnalyticsStore from 'msp/stores/log-analytics';
-import { Popover, Tag } from 'core/nusi';
+import { Popover, Tag, Spin } from 'core/nusi';
 import { formatTime } from 'common/utils';
 import mspStore from 'msp/stores/micro-service';
 import { last, map, throttle } from 'lodash';
@@ -31,7 +31,7 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
   const clusterName = mspStore.useStore((s) => s.clusterName);
   const ref = React.useRef();
   const activeRef = React.useRef();
-  const [{ logData, current, usedIds, operate, contextFields, sort, query }, updater, update] = useUpdate({
+  const [{ logData, current, usedIds, operate, contextFields, sort, query, filters, loading }, updater] = useUpdate({
     logData: [],
     current: source,
     usedIds: new Set(),
@@ -39,11 +39,13 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
     contextFields: fields,
     sort: 'asc',
     query: '',
+    filters: [],
+    loading: false,
   });
 
   const { getLogAnalyticContext } = mspLogAnalyticsStore.effects;
   const showTags = contextFields.filter((item) => item.display).map((item) => item.fieldName);
-  const [filters, setFilters] = React.useState([] as string[]);
+  // const [filters, setFilters] = React.useState([] as string[]);
 
   const activeIndex = logData.findIndex((x) => x?.source?._id === source._id);
   const foo = ['source', 'id', 'stream', 'content', 'uniId'];
@@ -126,6 +128,7 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
 
   const throttleScroll = throttle(onScroll, 100);
   React.useEffect(() => {
+    updater.loading(true);
     getLogAnalyticContext({
       timestampNanos: current.timestampNanos,
       id: current.id,
@@ -135,6 +138,7 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
       clusterName,
       count: 20,
     }).then((res) => {
+      updater.loading(false);
       const content = res || [];
       if (usedIds.has(`${current._id}_${sort}`)) {
         return;
@@ -179,16 +183,31 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
       <LogContextHeader
         zeroLog={zeroLog}
         source={source}
-        handleBefore={handleBefore}
-        handleAfter={handleAfter}
+        handleBefore={() => {
+          handleBefore();
+          ref.current.scrollTo({
+            top: 10,
+            left: 0,
+            behavior: 'smooth',
+          });
+        }}
+        handleAfter={() => {
+          handleAfter();
+          ref.current.scrollTo({
+            top: ref.current.scrollHeight,
+            left: 0,
+            behavior: 'smooth',
+          });
+        }}
         handleQuery={(value: string) => updater.query(value)}
         scrollToActive={scrollToActive}
         contextFields={contextFields}
         setContextFields={(value: any) => updater.contextFields(value)}
         filters={filters}
-        setFilters={setFilters}
+        setFilters={(value: any[]) => updater.filters(value)}
       />
       <div className="log-context-wrapper" ref={ref} onScroll={throttleScroll}>
+        {loading && operate === BEFORE && <Spin />}
         {map(logData, (item, index) => {
           const show =
             filters?.length === 0 || filters.every((filter) => foo.some((k) => item?.source?.[k]?.includes(filter)));
@@ -205,6 +224,7 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
             )
           );
         })}
+        {loading && operate === AFTER && <Spin />}
       </div>
     </>
   );
