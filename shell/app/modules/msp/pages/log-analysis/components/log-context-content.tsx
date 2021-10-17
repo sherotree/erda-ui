@@ -15,7 +15,7 @@ import React from 'react';
 import { Down as IconDown, Right as IconRight } from '@icon-park/react';
 import './log-context.scss';
 
-export const LogContextContent = ({ content }) => {
+export const LogContextContent = ({ content }: { content: string }) => {
   const [isExpand, setIsExpand] = React.useState(false);
   const isFoldContent = String(content).length > 1000;
   const value = isFoldContent && !isExpand ? `${String(content).slice(0, 1000)} ...` : content;

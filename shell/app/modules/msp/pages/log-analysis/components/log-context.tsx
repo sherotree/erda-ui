@@ -61,11 +61,25 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
   const LogContextRecord = ({ item, isActive, order, showTags }) => {
     const { tags, ...rest } = item;
     return (
-      <div className="flex" ref={isActive ? activeRef : null} style={{ background: isActive ? 'green' : 'white' }}>
-        <div className="mr-4">{order}</div>
-        <div className="font-semibold text-xs leading-5">{formatTime(rest.timestamp, 'MM-DD HH:mm:ss')}</div>
-        <div>
-          <div className="flex flex-wrap flex-1">
+      <div
+        className={`flex p-2 border-0 border-b border-brightgray border-solid ${
+          isActive ? 'bg-yellow' : ''
+        } hover:bg-magnolia`}
+        ref={isActive ? activeRef : null}
+        style={{ background: isActive ? 'purple' : 'white' }}
+      >
+        <div className="flex items-center flex-1">
+          <div
+            className={`mr-4 font-semibold ${order === 0 ? 'text-primary' : ''} ${
+              order > 0 ? 'text-green' : 'text-red'
+            }`}
+          >
+            {order}
+          </div>
+          <div className="font-semibold text-xs leading-5">{formatTime(rest.timestamp, 'MM-DD HH:mm:ss')}</div>
+        </div>
+        <div className="ml-4">
+          <div className="flex flex-wrap flex-1 mb-1">
             {map(tags ?? {}, (tagName, tagKey) => {
               const fieldName = `tags.${tagKey}`;
               if (!showTags.includes(fieldName)) {
@@ -80,7 +94,7 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
                     </div>
                   }
                 >
-                  <Tag className="mr-0 text-xs" color="#999999">
+                  <Tag className="mr-2 text-xs" color="#999999">
                     {tagName}
                   </Tag>
                 </Popover>
@@ -139,8 +153,6 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
     });
   }, [current, sort, query]);
 
-  // TODO: 标签 XX 参考 邮箱、站内信，暂时定 选一个触发一次接口
-
   function handleBefore() {
     setOperate(BEFORE);
     setCurrent(logData?.[0]?.source);
@@ -183,7 +195,7 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
                 item={item.source}
                 key={item.source._id}
                 isActive={activeIndex === index}
-                order={index - activeIndex}
+                order={Number(index) - activeIndex}
                 showTags={showTags}
               />
             )

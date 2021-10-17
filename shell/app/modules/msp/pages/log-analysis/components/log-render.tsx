@@ -443,7 +443,7 @@ const LogRender = ({ data, renderIndex, queryString, onFieldSelect, showTags, fi
           bodyStyle={{ height: '80vh', overflow: 'auto' }}
           onCancel={() => setIsLogModalVisible(false)}
           footer={null}
-          title="上下文浏览"
+          title={i18n.d('上下文浏览')}
         >
           <LogContext source={viewLogSource} data={data} fields={fields} />
         </Modal>

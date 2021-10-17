@@ -13,7 +13,7 @@
 
 import React from 'react';
 import { Tag, Dropdown, Select, Button, Input, Menu, Switch } from 'core/nusi';
-import { CloseSmall as IconCloseSmall, SettingTwo as IconSettingTwo } from '@icon-park/react';
+import { CloseSmall as IconCloseSmall, FocusOne as IconFocusOne, Filter as IconFilter } from '@icon-park/react';
 import i18n from 'i18n';
 import { produce } from 'immer';
 import { map, forEach } from 'lodash';
@@ -76,8 +76,7 @@ export const LogContextHeader = ({
     handleQuery(queryArr.join(' AND '));
   }, [selectedTags]);
 
-  // 删除 tag
-  function handleCloseTag(removedTag) {
+  function handleCloseTag(removedTag: string) {
     const foo = selectedTags.filter((item) => item !== removedTag);
     setSelectedTags(foo);
   }
@@ -159,7 +158,7 @@ export const LogContextHeader = ({
           showSearch
           allowClear
           style={{ width: 400 }}
-          placeholder="选择标签"
+          placeholder={i18n.d('选择标签')}
           onChange={(value) => {
             setSelectedTags(value);
           }}
@@ -181,25 +180,26 @@ export const LogContextHeader = ({
               setVisible(true);
             }}
           >
-            <IconSettingTwo theme="outline" size="14" fill="currentColor" />
-            {i18n.t('setting')}
+            <span className="mr-1">{i18n.d('字段过滤')}</span>
+            <IconFilter theme="outline" size="14" fill="currentColor" />
           </Button>
         </Dropdown>
       </div>
       <div className="flex">
-        <ButtonGroup className="download-btn-group mb-4">
+        <ButtonGroup className="mb-4">
           <Button size="small" onClick={handleBefore}>
-            更早
+            {i18n.d('更早')}
           </Button>
           <Button size="small" onClick={scrollToActive}>
-            当前日志
+            <IconFocusOne theme="outline" size="14" fill="currentColor" />
+            {i18n.d('当前日志')}
           </Button>
           <Button size="small" onClick={handleAfter}>
-            更新
+            {i18n.d('更新')}
           </Button>
         </ButtonGroup>
-        <div>
-          <span>过滤条件:</span>
+        <div className="ml-4">
+          <span className="mr-2">{i18n.d('过滤条件')}:</span>
           <Input
             className="w-16"
             value={filterValue}
