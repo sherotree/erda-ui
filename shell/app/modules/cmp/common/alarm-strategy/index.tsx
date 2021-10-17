@@ -390,6 +390,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
             );
           })}
         </Select>
+        <Button onClick={() => handleRemoveTriggerConditions(id)}>-</Button>
       </div>
     );
   };
