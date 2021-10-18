@@ -84,7 +84,6 @@ export const LogContextHeader = ({
 
   function handleCloseTag(removedTag: string) {
     const foo = selectedTags.filter((item) => item !== removedTag);
-    console.log({ foo, removedTag, selectedTags });
     setSelectedTags(foo);
   }
 
@@ -165,7 +164,7 @@ export const LogContextHeader = ({
           {displayTags.map((item) => (
             <Tag
               closable
-              className="mr-4 text-xs"
+              className="mr-2 mb-1 text-xs"
               onClose={() => {
                 handleCloseTag(item.tagKey);
               }}
@@ -193,7 +192,7 @@ export const LogContextHeader = ({
                 setVisible2(true);
               }}
             >
-              <span className="mr-1">{i18n.d('标签选择')}</span>
+              <span className="mr-1">{i18n.t('msp:label selection')}</span>
               <IconDown theme="outline" size="14" fill="currentColor" />
             </Button>
           </Dropdown>
@@ -211,7 +210,7 @@ export const LogContextHeader = ({
                 setVisible(true);
               }}
             >
-              <span className="mr-1">{i18n.d('字段过滤')}</span>
+              <span className="mr-1">{i18n.t('msp:field filtering')}</span>
               <IconFilter theme="outline" size="14" fill="currentColor" />
             </Button>
           </Dropdown>
@@ -220,18 +219,18 @@ export const LogContextHeader = ({
       <div className="flex mt-2 mb-4 items-center">
         <ButtonGroup>
           <Button size="small" onClick={handleBefore}>
-            {i18n.d('更早')}
+            {i18n.t('msp:earlier')}
           </Button>
           <Button size="small" onClick={scrollToActive}>
             <IconFocusOne theme="outline" size="14" fill="currentColor" />
-            {i18n.d('当前日志')}
+            {i18n.t('msp:current log')}
           </Button>
           <Button size="small" onClick={handleAfter}>
-            {i18n.d('更新')}
+            {i18n.t('msp:later')}
           </Button>
         </ButtonGroup>
         <div className="ml-4 flex items-center">
-          <span className="mr-2">{i18n.d('过滤条件')}:</span>
+          <span className="mr-2">{i18n.t('project:filter condition')}:</span>
           <Input
             className="w-40 mr-4"
             value={filterValue}
@@ -247,6 +246,9 @@ export const LogContextHeader = ({
           {map(filters, (item) => (
             <Tag
               closable
+              className="mb-1 mr-2 text-xs"
+              color="#999999"
+              key={item}
               onClose={() => {
                 setFilters([...filters.filter((x) => x !== item)]);
               }}

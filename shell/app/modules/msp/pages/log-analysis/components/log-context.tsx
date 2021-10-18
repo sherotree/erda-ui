@@ -13,7 +13,7 @@
 
 import React from 'react';
 import mspLogAnalyticsStore from 'msp/stores/log-analytics';
-import { Popover, Tag, Spin } from 'core/nusi';
+import { Popover, Tag, Spin, message } from 'core/nusi';
 import { formatTime } from 'common/utils';
 import mspStore from 'msp/stores/micro-service';
 import { last, map, throttle } from 'lodash';
@@ -21,6 +21,7 @@ import './log-context.scss';
 import { LogContextHeader } from './log-context-header';
 import { LogContextContent } from './log-context-content';
 import { useUpdate } from 'common';
+import i18n from 'i18n';
 
 const INITIAL = 'INITIAL';
 const BEFORE = 'BEFORE';
@@ -46,7 +47,7 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
   const { getLogAnalyticContext } = mspLogAnalyticsStore.effects;
   const showTags = contextFields.filter((item) => item.display).map((item) => item.fieldName);
   // const [filters, setFilters] = React.useState([] as string[]);
-
+  const [currentArr, setCurrentArr] = React.useState([]);
   const activeIndex = logData.findIndex((x) => x?.source?._id === source._id);
   const foo = ['source', 'id', 'stream', 'content', 'uniId'];
 
@@ -74,7 +75,7 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
         ref={isActive ? activeRef : null}
         style={{ background: isActive ? 'purple' : 'white' }}
       >
-        <div className="flex items-center flex-1">
+        <div className="flex items-center w-min">
           <div
             className={`mr-4 font-semibold ${order === 0 ? 'text-primary' : ''} ${
               order > 0 ? 'text-green' : 'text-red'
@@ -82,7 +83,7 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
           >
             {order}
           </div>
-          <div className="font-semibold text-xs leading-5">{formatTime(rest.timestamp, 'MM-DD HH:mm:ss')}</div>
+          <div className="font-semibold text-xs leading-5 w-20">{formatTime(rest.timestamp, 'MM-DD HH:mm:ss')}</div>
         </div>
         <div className="ml-4">
           <div className="flex flex-wrap flex-1 mb-1">
@@ -100,7 +101,7 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
                     </div>
                   }
                 >
-                  <Tag className="mr-2 text-xs" color="#999999">
+                  <Tag className="mr-2 mb-1 text-xs" color="#999999">
                     {tagName}
                   </Tag>
                 </Popover>
@@ -116,7 +117,7 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
               <p className="text-xs leading-5 relative">
                 <span className="bg-cultured leading-5 font-medium">{tag}</span>:{' '}
                 <span className="leading-5">
-                  <LogContextContent tag={tag} content={value} />
+                  <LogContextContent content={value} />
                 </span>
               </p>
             );
@@ -126,7 +127,7 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
     );
   };
 
-  const throttleScroll = throttle(onScroll, 100);
+  const throttleScroll = throttle(onScroll, 300);
   React.useEffect(() => {
     updater.loading(true);
     getLogAnalyticContext({
@@ -140,6 +141,8 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
     }).then((res) => {
       updater.loading(false);
       const content = res || [];
+      content?.length && setCurrentArr(content[content.length - 1]);
+      content?.length === 0 && throttle(message.info('没有更多数据'), 600);
       if (usedIds.has(`${current._id}_${sort}`)) {
         return;
       }
@@ -163,21 +166,19 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
 
   function handleBefore() {
     updater.operate(BEFORE);
-    updater.current(logData?.[0]?.source);
+    updater.current(currentArr);
     updater.sort('desc');
   }
 
   function handleAfter() {
     updater.operate(AFTER);
-    const lastItem = last(logData) as any;
-    updater.current(lastItem?.source);
+    updater.current(currentArr);
     updater.sort('asc');
   }
 
   function scrollToActive() {
     activeRef.current.scrollIntoView();
   }
-
   return (
     <>
       <LogContextHeader
@@ -206,8 +207,13 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
         filters={filters}
         setFilters={(value: any[]) => updater.filters(value)}
       />
-      <div className="log-context-wrapper" ref={ref} onScroll={throttleScroll}>
-        {loading && operate === BEFORE && <Spin />}
+      <div className="log-context-wrapper h-2/3" ref={ref} onScroll={throttleScroll}>
+        {loading && operate === BEFORE && (
+          <div className="flex justify-center mb-1">
+            <Spin className="mr-2" />
+            <span className="text-primary">{i18n.t('load more')}</span>
+          </div>
+        )}
         {map(logData, (item, index) => {
           const show =
             filters?.length === 0 || filters.every((filter) => foo.some((k) => item?.source?.[k]?.includes(filter)));
@@ -224,7 +230,12 @@ const LogContext = ({ source, data, fields }: { source: any; data: any }) => {
             )
           );
         })}
-        {loading && operate === AFTER && <Spin />}
+        {loading && operate === AFTER && (
+          <div className="flex justify-center mt-1">
+            <Spin className="mr-2" />
+            <span className="text-primary">{i18n.t('load more')}</span>
+          </div>
+        )}
       </div>
     </>
   );

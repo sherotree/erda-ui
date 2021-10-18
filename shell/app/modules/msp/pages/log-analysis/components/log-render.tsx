@@ -440,10 +440,10 @@ const LogRender = ({ data, renderIndex, queryString, onFieldSelect, showTags, fi
         <Modal
           width={1000}
           visible
-          bodyStyle={{ height: '80vh', overflow: 'auto' }}
+          bodyStyle={{ height: '70vh', overflow: 'auto' }}
           onCancel={() => setIsLogModalVisible(false)}
           footer={null}
-          title={i18n.d('上下文浏览')}
+          title={i18n.t('msp:browse context')}
         >
           <LogContext source={viewLogSource} data={data} fields={fields} />
         </Modal>
