@@ -14,7 +14,7 @@
 import React from 'react';
 import { formatTime, goTo, setLS } from 'common/utils';
 import { map, pick } from 'lodash';
-import { Dropdown, Menu, Popover, Tag, Modal } from 'core/nusi';
+import { Dropdown, Menu, Popover, Tag, Drawer } from 'core/nusi';
 import {
   logToken,
   logTokenReg,
@@ -437,16 +437,16 @@ const LogRender = ({ data, renderIndex, queryString, onFieldSelect, showTags, fi
       })}
       <Spotlight visible={visible} target={ref.current} onVisibleChange={setVisible} />
       {isLogModalVisible && (
-        <Modal
-          width={1000}
+        <Drawer
+          width="80%"
           visible
-          bodyStyle={{ height: '70vh', overflow: 'auto' }}
-          onCancel={() => setIsLogModalVisible(false)}
+          onClose={() => setIsLogModalVisible(false)}
           footer={null}
           title={i18n.t('msp:browse context')}
+          // bodyStyle={{ overflow: 'hidden' }}
         >
           <LogContext source={viewLogSource} data={data} fields={fields} />
-        </Modal>
+        </Drawer>
       )}
     </div>
   );

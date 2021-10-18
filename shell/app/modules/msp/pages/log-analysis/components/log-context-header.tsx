@@ -158,7 +158,7 @@ export const LogContextHeader = ({
   );
 
   return (
-    <>
+    <div className="">
       <div className="flex justify-between">
         <div>
           {displayTags.map((item) => (
@@ -258,6 +258,6 @@ export const LogContextHeader = ({
           ))}
         </div>
       </div>
-    </>
+    </div>
   );
 };

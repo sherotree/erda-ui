@@ -35,12 +35,12 @@ declare namespace LOG_ANALYTICS {
     total: number;
   }
 
-  type IField = {
+  interface IField {
     display: boolean;
     fieldName: string;
     supportAggregation: boolean;
     group: number;
-  };
+  }
 
   interface QuerySearch {
     addon: string;
@@ -48,7 +48,7 @@ declare namespace LOG_ANALYTICS {
     end: number;
     clusterName: string;
     query?: string;
-    sort: any[];
+    sort: string;
     pageNo: number;
     pageSize: number;
     highlight: boolean;
@@ -69,18 +69,20 @@ declare namespace LOG_ANALYTICS {
     highlight: {
       [key: string]: string[];
     };
-    source: {
-      _id: string;
-      id: string;
-      offset: number;
-      content: string;
-      stream: string;
-      tags: {
-        [key: string]: string;
-      };
-      timestamp: number;
-      timestampNanos?: string;
+    source: ILogSource;
+  }
+
+  interface ILogSource {
+    _id: string;
+    id: string;
+    offset: number;
+    content: string;
+    stream: string;
+    tags: {
+      [key: string]: string;
     };
+    timestamp: number;
+    timestampNanos?: string;
   }
 
   interface SearchResult {
