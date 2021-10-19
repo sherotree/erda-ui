@@ -16,11 +16,11 @@ import mspLogAnalyticsStore from 'msp/stores/log-analytics';
 import { Popover, Tag, Spin, message } from 'core/nusi';
 import { formatTime } from 'common/utils';
 import mspStore from 'msp/stores/micro-service';
-import { map, throttle, uniqueId } from 'lodash';
+import { map, throttle, uniqueId, last } from 'lodash';
 import './log-context.scss';
 import { LogContextHeader } from './log-context-header';
 import { LogContextContent } from './log-context-content';
-import { useUpdate } from 'common';
+import { useUpdate, EmptyHolder } from 'common';
 import i18n from 'i18n';
 
 const INITIAL = 'INITIAL';
@@ -70,12 +70,12 @@ const LogContext = ({
     const { scrollTop = 0, scrollHeight = 0, clientHeight = 0 } = ref.current || {};
 
     // 滚动到top的时候
-    if (scrollTop < 10) {
+    if (scrollTop < 5) {
       handleBefore();
     }
 
     // 滚动到底部的时候
-    if (scrollHeight - scrollTop - clientHeight < 10) {
+    if (scrollHeight - scrollTop - clientHeight < 5) {
       handleAfter();
     }
   }
@@ -85,7 +85,7 @@ const LogContext = ({
     return (
       <div
         className={`flex p-2 border-0 border-b border-brightgray border-solid ${
-          isActive ? 'bg-yellow' : ''
+          isActive ? 'bg-light-cyan' : ''
         } hover:bg-magnolia`}
         ref={isActive ? activeRef : null}
       >
@@ -97,7 +97,7 @@ const LogContext = ({
           >
             {order}
           </div>
-          <div className="font-semibold text-xs leading-5 w-20">{formatTime(rest.timestamp, 'MM-DD HH:mm:ss')}</div>
+          <div className="font-semibold text-xs leading-5 w-24">{formatTime(rest.timestamp, 'MM-DD HH:mm:ss')}</div>
         </div>
         <div className="ml-4">
           <div className="flex flex-wrap flex-1 mb-1">
@@ -141,7 +141,8 @@ const LogContext = ({
     );
   };
 
-  const throttleScroll = throttle(onScroll, 300);
+  const throttleScroll = throttle(onScroll, 800);
+
   React.useEffect(() => {
     updater.loading(true);
     getLogAnalyticContext({
@@ -151,11 +152,15 @@ const LogContext = ({
       sort,
       query,
       clusterName,
-      count: 3,
+      count: 20,
     }).then((res) => {
       updater.loading(false);
       const content = res || [];
-      content?.length === 0 && throttle(message.info('没有更多数据'), 600);
+
+      if (content?.length === 0) {
+        throttle(message.info('没有更多数据'), 1000);
+      }
+
       if (usedIds.has(`${current._id}_${sort}`)) {
         return;
       }
@@ -164,8 +169,7 @@ const LogContext = ({
         updater.logData([{ source }, ...content]);
       }
       if (operate === BEFORE) {
-        const _content = [];
-        content.length && content.map((item) => _content.unshift(item));
+        const _content = [...content].reverse();
         updater.logData([..._content, ...logData]);
         updater.sort('desc');
       }
@@ -187,13 +191,17 @@ const LogContext = ({
 
   function handleAfter() {
     updater.operate(AFTER);
-    updater.current(logData[logData.length - 1].source);
+    updater.current(last(logData).source);
     updater.sort('asc');
   }
 
   function scrollToActive() {
     activeRef.current.scrollIntoView();
   }
+
+  const filterLogData = logData.filter(
+    (item) => filters?.length === 0 || filters.every((filter) => foo.some((k) => item?.source?.[k]?.includes(filter))),
+  );
 
   return (
     <>
@@ -211,7 +219,7 @@ const LogContext = ({
         handleAfter={() => {
           handleAfter();
           ref.current.scrollTo({
-            top: ref.current.scrollHeight,
+            top: ref.current.scrollHeight + 50,
             left: 0,
             behavior: 'smooth',
           });
@@ -240,21 +248,18 @@ const LogContext = ({
             <span className="text-primary">{i18n.t('load more')}</span>
           </div>
         )}
-        {map(logData, (item, index) => {
-          const show =
-            filters?.length === 0 || filters.every((filter) => foo.some((k) => item?.source?.[k]?.includes(filter)));
+        {map(filterLogData, (item, index) => {
           return (
-            show && (
-              <LogContextRecord
-                item={item.source}
-                key={uniqueId()}
-                isActive={activeIndex === index}
-                order={Number(index) - activeIndex}
-                showTags={showTags}
-              />
-            )
+            <LogContextRecord
+              item={item.source}
+              key={uniqueId()}
+              isActive={activeIndex === index}
+              order={Number(index) - activeIndex}
+              showTags={showTags}
+            />
           );
         })}
+        {filterLogData?.length === 0 && <EmptyHolder relative />}
         {loading && operate === AFTER && (
           <div className="flex justify-center mt-1">
             <Spin className="mr-2" />

@@ -52,13 +52,6 @@ export const LogContextHeader = ({
   const [filterValue, setFilterValue] = React.useState('');
   const displayTags = [] as Array<{ tagKey: string; tagName: string }>;
   const queryArr = [] as string[];
-  const tagOptions = map(source.tags, (value, key) => {
-    return (
-      <Option value={key} key={key}>
-        {key}
-      </Option>
-    );
-  });
   const [visible, setVisible] = React.useState(false);
   const [visible2, setVisible2] = React.useState(false);
   const handleDisplayChange = (checked: boolean, record: LOG_ANALYTICS.IField) => {

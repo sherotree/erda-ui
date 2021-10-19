@@ -57,6 +57,7 @@ module.exports = {
         cultured: '#f6f4f9',
         magnolia: '#f2f1fc',
         mask: 'rgba(0,0,0,0.45)',
+        'light-cyan': '#E6FFFB',
         'light-primary': '#6a549e19', // rgba($primary, .1)
         'shallow-primary': '#6a549e99', // rgba($primary, .6)
         'light-gray': '#bbbbbb',
