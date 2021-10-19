@@ -48,45 +48,52 @@ const LogContext = ({
   const clusterName = mspStore.useStore((s) => s.clusterName);
   const ref = React.useRef();
   const activeRef = React.useRef();
-  const [{ logData, current, usedIds, operate, contextFields, sort, query, filters, loading }, updater, update] =
-    useUpdate({
-      logData: [],
-      current: source,
-      usedIds: new Set(),
-      operate: INITIAL,
-      contextFields: fields,
-      sort: 'asc',
-      query: '',
-      filters: [],
-      loading: false,
-    });
+  const [
+    { logData, current, usedIds, operate, contextFields, sort, query, filters, loading, isRerender },
+    updater,
+    update,
+  ] = useUpdate({
+    logData: [],
+    current: source,
+    usedIds: new Set(),
+    operate: INITIAL,
+    contextFields: fields,
+    sort: 'asc',
+    query: '',
+    filters: [],
+    loading: false,
+    isRerender: false,
+  });
 
   const { getLogAnalyticContext } = mspLogAnalyticsStore.effects;
   const showTags = contextFields.filter((item) => item.display).map((item) => item.fieldName);
   const activeIndex = logData.findIndex((x) => x?.source?._id === source._id);
-
-  const foo = ['source', 'id', 'stream', 'content', 'uniId'];
+  const filterCategory = ['source', 'id', 'stream', 'content', 'uniId'];
 
   function onScroll() {
     const { scrollTop = 0, scrollHeight = 0, clientHeight = 0 } = ref.current || {};
 
     // 滚动到top的时候
     if (scrollTop < 5) {
-      handleBefore();
+      if (isRerender) {
+        handleBefore();
+      }
     }
 
     // 滚动到底部的时候
     if (scrollHeight - scrollTop - clientHeight < 5) {
-      handleAfter();
+      if (isRerender) {
+        handleAfter();
+      }
     }
   }
 
-  const LogContextRecord = ({ item, isActive, order, showTags }: ILogRecordProps) => {
+  const LogContextRecord = ({ item, isActive, order, showTags: displayTags }: ILogRecordProps) => {
     const { tags, ...rest } = item;
     return (
       <div
         className={`flex p-2 border-0 border-b border-brightgray border-solid ${
-          isActive ? 'bg-light-cyan' : ''
+          isActive ? 'bg-magnolia' : ''
         } hover:bg-magnolia`}
         ref={isActive ? activeRef : null}
       >
@@ -104,7 +111,7 @@ const LogContext = ({
           <div className="flex flex-wrap flex-1 mb-1">
             {map(tags ?? {}, (tagName, tagKey) => {
               const fieldName = `tags.${tagKey}`;
-              if (!showTags.includes(fieldName)) {
+              if (!displayTags.includes(fieldName)) {
                 return null;
               }
               return (
@@ -124,7 +131,7 @@ const LogContext = ({
             })}
           </div>
           {map(rest, (value, tag) => {
-            if (!showTags.includes(tag)) {
+            if (!displayTags.includes(tag)) {
               return null;
             }
 
@@ -142,57 +149,59 @@ const LogContext = ({
     );
   };
 
-  const throttleScroll = throttle(onScroll, 800);
+  const throttleScroll = throttle(onScroll, 300);
 
   React.useEffect(() => {
     updater.loading(true);
-    getLogAnalyticContext({
-      timestampNanos: current.timestampNanos,
-      id: current.id,
-      offset: current.offset,
-      sort,
-      query,
-      clusterName,
-      count: 20,
-    }).then((res) => {
-      updater.loading(false);
-      const content = res || [];
+    if (query) {
+      getLogAnalyticContext({
+        timestampNanos: current?.timestampNanos || '',
+        id: current?.id,
+        offset: current?.offset,
+        sort,
+        query,
+        clusterName,
+        count: 20,
+      }).then((res) => {
+        updater.loading(false);
+        const content = res || [];
+        updater.isRerender(true);
+        if (content?.length === 0) {
+          throttle(message.info(i18n.t('no more data')), 1000);
+        }
 
-      if (content?.length === 0) {
-        throttle(message.info('没有更多数据'), 1000);
-      }
+        if (usedIds.has(`${current?._id}_${sort}`)) {
+          return;
+        }
 
-      if (usedIds.has(`${current._id}_${sort}`)) {
-        return;
-      }
+        if (operate === INITIAL) {
+          updater.logData([{ source }, ...content]);
+        }
+        if (operate === BEFORE) {
+          const _content = [...content].reverse();
+          updater.logData([..._content, ...logData]);
+          updater.sort('desc');
+        }
+        if (operate === AFTER) {
+          updater.logData([...logData, ...content]);
+          updater.sort('asc');
+        }
 
-      if (operate === INITIAL) {
-        updater.logData([{ source }, ...content]);
-      }
-      if (operate === BEFORE) {
-        const _content = [...content].reverse();
-        updater.logData([..._content, ...logData]);
-        updater.sort('desc');
-      }
-      if (operate === AFTER) {
-        updater.logData([...logData, ...content]);
-        updater.sort('asc');
-      }
-
-      usedIds.add(`${current._id}_${sort}`);
-      updater.usedIds(usedIds);
-    });
+        usedIds.add(`${current?._id}_${sort}`);
+        updater.usedIds(usedIds);
+      });
+    }
   }, [current, sort, query]);
 
   function handleBefore() {
     updater.operate(BEFORE);
-    updater.current(logData[0].source);
+    updater.current(logData[0]?.source);
     updater.sort('desc');
   }
 
   function handleAfter() {
     updater.operate(AFTER);
-    updater.current(last(logData).source);
+    updater.current(last(logData)?.source);
     updater.sort('asc');
   }
 
@@ -201,7 +210,9 @@ const LogContext = ({
   }
 
   const filterLogData = logData.filter(
-    (item) => filters?.length === 0 || filters.every((filter) => foo.some((k) => item?.source?.[k]?.includes(filter))),
+    (item) =>
+      filters?.length === 0 ||
+      filters.every((filter) => filterCategory.some((k) => item?.source?.[k]?.includes(filter))),
   );
 
   return (
@@ -234,35 +245,41 @@ const LogContext = ({
             operate: INITIAL,
             sort: 'asc',
             loading: false,
+            isRerender: false,
           });
         }}
         scrollToActive={scrollToActive}
         contextFields={contextFields}
-        setContextFields={(value: any) => updater.contextFields(value)}
+        setContextFields={(value: LOG_ANALYTICS.IField[]) => updater.contextFields(value)}
         filters={filters}
-        setFilters={(value: any[]) => updater.filters(value)}
+        setFilters={(value: string[]) => updater.filters(value)}
       />
       <div className="log-context-wrapper h-5/6 overflow-auto" ref={ref} onScroll={throttleScroll}>
         {loading && operate === BEFORE && (
-          <div className="flex justify-center mb-1">
+          <div className="flex justify-center items-center mb-1 h-10">
             <Spin className="mr-2" />
             <span className="text-primary">{i18n.t('load more')}</span>
           </div>
         )}
-        {map(filterLogData, (item, index) => {
+        {map(logData, (item, index) => {
+          const show =
+            filters?.length === 0 ||
+            filters.every((filter) => filterCategory.some((k) => item?.source?.[k]?.includes(filter)));
           return (
-            <LogContextRecord
-              item={item.source}
-              key={uniqueId()}
-              isActive={activeIndex === index}
-              order={Number(index) - activeIndex}
-              showTags={showTags}
-            />
+            show && (
+              <LogContextRecord
+                item={item.source}
+                key={uniqueId()}
+                isActive={activeIndex === index}
+                order={Number(index) - activeIndex}
+                showTags={showTags}
+              />
+            )
           );
         })}
         {filterLogData?.length === 0 && <EmptyHolder relative />}
         {loading && operate === AFTER && (
-          <div className="flex justify-center mt-1">
+          <div className="flex justify-center items-center mt-1 h-10">
             <Spin className="mr-2" />
             <span className="text-primary">{i18n.t('load more')}</span>
           </div>

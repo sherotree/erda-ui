@@ -61,7 +61,6 @@ declare namespace LOG_ANALYTICS {
     count: number;
     query: string;
     sort: string;
-    addon: string;
     clusterName: string;
   }
 

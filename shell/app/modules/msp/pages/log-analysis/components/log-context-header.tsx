@@ -12,7 +12,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import React from 'react';
-import { Tag, Dropdown, Select, Button, Input, Menu, Switch } from 'core/nusi';
+import { Tag, Dropdown, Button, Input, Menu, Switch } from 'core/nusi';
 import {
   CloseSmall as IconCloseSmall,
   FocusOne as IconFocusOne,
@@ -25,7 +25,19 @@ import { map, forEach } from 'lodash';
 import './log-context.scss';
 
 const { Group: ButtonGroup } = Button;
-const { Option } = Select;
+
+interface IProps {
+  zeroLog: LOG_ANALYTICS.LogItem;
+  source: LOG_ANALYTICS.ILogSource;
+  handleBefore: () => void;
+  handleAfter: () => void;
+  handleQuery: (value: string) => void;
+  scrollToActive: () => void;
+  contextFields: LOG_ANALYTICS.IField[];
+  setContextFields: (fields: LOG_ANALYTICS.IField[]) => void;
+  filters: string[];
+  setFilters: (filters: string[]) => void;
+}
 
 const Item: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ children, ...rest }) => {
   return (
@@ -46,14 +58,14 @@ export const LogContextHeader = ({
   setContextFields,
   filters,
   setFilters,
-}) => {
+}: IProps) => {
   const defaultLogTags = ['application_name', 'service_name', 'pod_name'];
   const [selectedTags, setSelectedTags] = React.useState(defaultLogTags);
   const [filterValue, setFilterValue] = React.useState('');
   const displayTags = [] as Array<{ tagKey: string; tagName: string }>;
   const queryArr = [] as string[];
-  const [visible, setVisible] = React.useState(false);
-  const [visible2, setVisible2] = React.useState(false);
+  const [fieldFilterVisible, setFieldFilterVisibleVisible] = React.useState(false);
+  const [tagSelectVisible, setTagSelectVisible] = React.useState(false);
   const handleDisplayChange = (checked: boolean, record: LOG_ANALYTICS.IField) => {
     const newField = produce(contextFields, (draft) => {
       if (draft) {
@@ -93,7 +105,7 @@ export const LogContextHeader = ({
                 size="24"
                 fill="currentColor"
                 onClick={() => {
-                  setVisible(false);
+                  setFieldFilterVisibleVisible(false);
                 }}
               />
             </span>
@@ -131,7 +143,7 @@ export const LogContextHeader = ({
     );
   }, [contextFields]);
 
-  const bar = (
+  const tagMenu = (
     <Menu>
       <div className="max-h-48 overflow-y-auto">
         {map(
@@ -172,17 +184,17 @@ export const LogContextHeader = ({
 
         <div className="flex">
           <Dropdown
-            visible={visible2}
-            onVisibleChange={setVisible2}
+            visible={tagSelectVisible}
+            onVisibleChange={setTagSelectVisible}
             overlayClassName="w-64"
             trigger={['click']}
-            overlay={bar}
+            overlay={tagMenu}
           >
             <Button
               size="small"
               className="flex items-center cursor-pointer ml-2"
               onClick={() => {
-                setVisible2(true);
+                setTagSelectVisible(true);
               }}
             >
               <span className="mr-1">{i18n.t('msp:label selection')}</span>
@@ -190,8 +202,8 @@ export const LogContextHeader = ({
             </Button>
           </Dropdown>
           <Dropdown
-            visible={visible}
-            onVisibleChange={setVisible}
+            visible={fieldFilterVisible}
+            onVisibleChange={setFieldFilterVisibleVisible}
             overlayClassName="w-64"
             trigger={['click']}
             overlay={menu}
@@ -200,7 +212,7 @@ export const LogContextHeader = ({
               size="small"
               className="flex items-center cursor-pointer ml-2"
               onClick={() => {
-                setVisible(true);
+                setFieldFilterVisibleVisible(true);
               }}
             >
               <span className="mr-1">{i18n.t('msp:field filtering')}</span>
@@ -226,6 +238,7 @@ export const LogContextHeader = ({
           <span className="mr-2">{i18n.t('project:filter condition')}:</span>
           <Input
             className="w-40 mr-4"
+            size="small"
             value={filterValue}
             onChange={(e) => setFilterValue(e.target.value)}
             onPressEnter={(e) => {
