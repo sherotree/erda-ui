@@ -179,12 +179,14 @@ const LogItemToolBar = ({
           </span>
         </Copy>
         <span className="text-darkgray hover:text-primary">
-          <IconLogSearch
-            {...iconProps}
-            onClick={() => {
-              onHandleLogModalVisible(data?.source);
-            }}
-          />
+          <Popover content={i18n.t('msp:browse context')}>
+            <IconLogSearch
+              {...iconProps}
+              onClick={() => {
+                onHandleLogModalVisible(data?.source);
+              }}
+            />
+          </Popover>
         </span>
         <span className="text-darkgray hover:text-primary">
           <Popover content={i18n.t('org:create analysis rule')}>

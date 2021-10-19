@@ -15,7 +15,7 @@ import React from 'react';
 import { Input, Menu, Progress } from 'core/nusi';
 import i18n from 'i18n';
 import './field-menu.scss';
-import { useUpdate } from 'common';
+import { useUpdate } from 'common/use-hooks';
 import { LOGIC_OPERATOR } from 'msp/pages/log-analysis/components/constants';
 import { mergeTagToString, transformQueryToTagMap } from 'msp/pages/log-analysis/components/utils';
 import mspLogAnalyticsStore from 'msp/stores/log-analytics';

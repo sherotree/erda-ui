@@ -20,7 +20,8 @@ import { map, throttle, uniqueId, last } from 'lodash';
 import './log-context.scss';
 import { LogContextHeader } from './log-context-header';
 import { LogContextContent } from './log-context-content';
-import { useUpdate, EmptyHolder } from 'common';
+import { EmptyHolder } from 'common';
+import { useUpdate } from 'common/use-hooks';
 import i18n from 'i18n';
 
 const INITIAL = 'INITIAL';
