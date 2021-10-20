@@ -17,6 +17,7 @@ import { SettingsTabs, ConfigLayout, MembersTable } from 'common';
 import { goTo, insertWhen } from 'common/utils';
 import orgStore from 'app/org-home/stores/org';
 import NotifyGroup from 'application/pages/settings/components/app-notify/common-notify-group';
+import NotifyChannel from './notice-channel';
 import memberStore from 'common/stores/org-member';
 import BlockNetwork from 'org/pages/setting/block-network';
 import { OrgInfo } from './org-info';
@@ -162,6 +163,25 @@ export const OrgSetting = () => {
                   title: i18n.t('application:organize notification groups to set up notifications'),
                   children: (
                     <NotifyGroup memberStore={memberStore} commonPayload={{ scopeType: 'org', scopeId: `${orgId}` }} />
+                  ),
+                },
+              ]}
+            />
+          ),
+        },
+        {
+          tabTitle: i18n.d('通知渠道'),
+          tabKey: 'notifyChannel',
+          content: (
+            <ConfigLayout
+              sectionList={[
+                {
+                  title: i18n.d('建立通知渠道设置通知方式'),
+                  children: (
+                    <NotifyChannel
+                      memberStore={memberStore}
+                      commonPayload={{ scopeType: 'org', scopeId: `${orgId}` }}
+                    />
                   ),
                 },
               ]}

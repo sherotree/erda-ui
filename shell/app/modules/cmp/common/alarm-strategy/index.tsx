@@ -17,7 +17,7 @@ import moment from 'moment';
 import { useMount, useUnmount } from 'react-use';
 import { Modal, Button, Spin, Switch, Select, Table, Input, InputNumber, Popover, Divider, Tooltip } from 'core/nusi';
 import { FormModal } from 'common';
-import { useSwitch, useUpdate } from "common/use-hooks";
+import { useSwitch, useUpdate } from 'common/use-hooks';
 import { goTo, insertWhen } from 'common/utils';
 import { FormInstance, ColumnProps } from 'core/common/interface';
 import i18n from 'i18n';
@@ -38,7 +38,13 @@ import orgStore from 'app/org-home/stores/org';
 import './index.scss';
 import routeInfoStore from 'core/stores/route';
 import { AddOne as IconAddOne, ReduceOne as IconReduceOne } from '@icon-park/react';
-import { mockTriggerConditions, mockNotifyStrategy } from './mock';
+import {
+  mockNotifyStrategy,
+  mockTriggerConditionKeys,
+  mockTriggerConditionOperators,
+  mockTriggerConditionValues,
+} from './mock';
+import { TriggerConditionSelect } from './trigger-condition-select';
 
 const { confirm, warning } = Modal;
 const { Option } = Select;
@@ -119,13 +125,31 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     editingFormRule: {},
     activedGroupId: undefined,
     triggerConditions: [],
-    triggerConditionKey: null,
-    triggerConditionOperator: null,
-    triggerConditionValue: null,
+    triggerConditionKeys: [],
+    triggerOperators: [],
+    triggerConditionValues: [],
     selectedNotifyGroup: null,
     notifyLevel: null,
     notifyMethod: null,
   });
+
+  useMount(() => {
+    // TODO:初次加载的时候调用接口获取第一列Select的接口
+    updater.triggerConditionKeys(mockTriggerConditionKeys); // TODO:这里的 mockTriggerConditionKeys 改成从接口返回的列表
+
+    // TODO:初次加载的时候调用接口获取第二列Select的接口
+    updater.triggerOperators(mockTriggerConditionOperators); // TODO:这里的 mockTriggerConditionOperators 改成从接口返回的列表
+  });
+
+  React.useEffect(() => {
+    // TODO: 当triggerConditionKeys改变时调用接口获取第三列Select接口
+    updater.triggerConditionValues(mockTriggerConditionValues); // TODO:这里的 mockTriggerConditionValues 改成从接口返回的列表
+
+    // 第一次进入页面的时候，默认创建一条
+    if (state.triggerConditions.length === 0) {
+      handleAddTriggerConditions();
+    }
+  }, [state.triggerConditionKeys]);
 
   useMount(() => {
     let payload = { scopeType, scopeId };
@@ -342,59 +366,6 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     },
   ];
 
-  const TriggerConditionSelect = ({ id }) => {
-    const current = state.triggerConditions.find((x) => x.id === id);
-    const selectedTrigger = mockTriggerConditions.data.find((x) => x?.key === current?.triggerConditionKey);
-    const triggerOperators = selectedTrigger?.operators || [];
-    const triggerOptions = selectedTrigger?.options || [];
-
-    return (
-      <div className="flex">
-        <Select
-          className="mr-8"
-          value={current?.triggerConditionKey}
-          onSelect={(value) => {
-            handleEditTriggerConditions(id, { key: 'triggerConditionKey', value });
-          }}
-        >
-          {map(mockTriggerConditions.data, (item) => {
-            return (
-              <Option key={item?.key} value={item?.key}>
-                {item?.display}
-              </Option>
-            );
-          })}
-        </Select>
-        <Select
-          className="mr-8"
-          value={current?.triggerConditionOperator}
-          onSelect={(value) => handleEditTriggerConditions(id, { key: 'triggerConditionOperator', value })}
-        >
-          {map(triggerOperators, (item) => {
-            return (
-              <Option key={item?.key} value={item?.key}>
-                {item?.display}
-              </Option>
-            );
-          })}
-        </Select>
-        <Select
-          value={current?.triggerConditionValue}
-          onSelect={(value) => handleEditTriggerConditions(id, { key: 'triggerConditionValue', value })}
-        >
-          {map(triggerOptions, (item) => {
-            return (
-              <Option key={item?.key} value={item?.key}>
-                {item?.display}
-              </Option>
-            );
-          })}
-        </Select>
-        <Button onClick={() => handleRemoveTriggerConditions(id)}>-</Button>
-      </div>
-    );
-  };
-
   const NotifyGroupSelect = () => {
     const selectedNotifyGroup = mockNotifyStrategy.data?.groups?.find((x) => x?.key === state.selectedNotifyGroup);
     const levels = mockNotifyStrategy?.data?.levels || [];
@@ -477,15 +448,21 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       name: 'triggerConditions',
       getComp: () => (
         <>
-          <Button
-            onClick={() => {
-              handleAddTriggerConditions();
-            }}
-          >
-            +
-          </Button>
-          {state.triggerConditions.map((item) => (
-            <TriggerConditionSelect key={item.id} id={item.id} />
+          {state.triggerConditions.map((item, index) => (
+            <TriggerConditionSelect
+              key={item.id}
+              id={item.id}
+              updater={updater}
+              current={state.triggerConditions.find((x) => x.id === item.id)}
+              handleEditTriggerConditions={handleEditTriggerConditions}
+              handleRemoveTriggerConditions={handleRemoveTriggerConditions}
+              triggerConditionKeys={mockTriggerConditionKeys}
+              triggerOperators={mockTriggerConditionOperators}
+              handleAddTriggerConditions={handleAddTriggerConditions}
+              triggerConditionValues={state.triggerConditionValues}
+              isLast={state.triggerConditions.length - 1 === index}
+              showSubtract={state.triggerConditions.length > 1}
+            />
           ))}
         </>
       ),
@@ -696,9 +673,9 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     updater.triggerConditions([
       {
         id: uniqueId(),
-        triggerConditionKey: null,
-        triggerConditionOperator: null,
-        triggerConditionValue: null,
+        triggerConditionKey: state.triggerConditionKeys[0]?.key,
+        triggerConditionOperator: state.triggerOperators[0]?.key,
+        triggerConditionValue: state.triggerConditionValues[0]?.key,
       },
       ...state.triggerConditions,
     ]);

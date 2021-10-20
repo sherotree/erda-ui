@@ -82,6 +82,41 @@ export const mockTriggerConditions = {
   ],
 };
 
+export const mockTriggerConditionKeys = [
+  { key: 'cluster', display: '集群' },
+  { key: 'ip', display: '机器IP' },
+];
+
+export const mockTriggerConditionOperators = [
+  {
+    key: 'eq',
+    display: '等于',
+  },
+  {
+    key: 'neq',
+    display: '不等于',
+  },
+  {
+    key: 'all',
+    display: '全部',
+  },
+  {
+    key: 'contains',
+    display: '包含',
+  },
+  {
+    key: 'like',
+    display: '字符串包含',
+  },
+];
+
+export const mockTriggerConditionValues = [
+  { key: '10.0.6.216', display: '10.0.6.216' },
+  { key: '10.0.6.218', display: '10.0.6.218' },
+  { key: '10.0.6.219', display: '10.0.6.219' },
+  { key: '10.0.6.220', display: '10.0.6.220' },
+];
+
 export const mockNotifyStrategy = {
   success: true,
   data: {
