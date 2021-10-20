@@ -129,6 +129,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       options: ['go-demo', 'foo1', 'foo2', 'foo3'],
     },
   ];
+
   const { total, pageNo, pageSize } = alarmPaging;
   const orgId = orgStore.getState((s) => s.currentOrg.id);
   const [getAlertDetailLoading, getAlertsLoading, toggleAlertLoading] = useLoading(alarmStrategyStore, [
@@ -166,31 +167,11 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     editingFormRule: {},
     activedGroupId: undefined,
     triggerConditions: [],
-    triggerConditionKeys: [],
-    triggerOperators: [],
-    triggerConditionValues: [],
+    triggerConditionValueOptions: [],
     selectedNotifyGroup: null,
     notifyLevel: null,
     notifyMethod: null,
   });
-
-  useMount(() => {
-    // TODO:初次加载的时候调用接口获取第一列Select的接口
-    updater.triggerConditionKeys(alertTriggerConditions); // TODO:这里的 mockTriggerConditionKeys 改成从接口返回的列表
-
-    // TODO:初次加载的时候调用接口获取第二列Select的接口
-    updater.triggerOperators(mockTriggerConditionOperators); // TODO:这里的 mockTriggerConditionOperators 改成从接口返回的列表
-  });
-
-  React.useEffect(() => {
-    // TODO: 当triggerConditionKeys改变时调用接口获取第三列Select接口
-    updater.triggerConditionValues(alertTriggerConditionsContent); // TODO:这里的 mockTriggerConditionValues 改成从接口返回的列表
-
-    // 第一次进入页面的时候，默认创建一条
-    if (state.triggerConditions.length === 0) {
-      handleAddTriggerConditions();
-    }
-  }, [state.triggerConditionKeys]);
 
   useMount(() => {
     let payload = { scopeType, scopeId };
@@ -203,8 +184,8 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     getSMSNotifyConfig({ orgId });
     getAlerts();
     getAlarmScopes();
-    // getAlertTriggerConditions(scopeType);
-    // getAlertTriggerConditionsContent({ projectId: scopeId, scopeType });
+    getAlertTriggerConditions(scopeType);
+    getAlertTriggerConditionsContent({ projectId: scopeId, scopeType });
     getAlertTypes();
     getNotifyGroups(payload);
     getRoleMap({ scopeType, scopeId: scopeType === ScopeType.MSP ? commonPayload?.scopeId : scopeId });
@@ -487,26 +468,28 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       initialValue: state.editingFormRule.name,
     },
     {
-      label: i18n.d('触发条件'),
+      label: (
+        <div>
+          <span>{i18n.d('触发条件')}</span>
+          <IconAddOne className="cursor-pointer" size="24" onClick={() => handleAddTriggerConditions()} />
+        </div>
+      ),
       name: 'triggerConditions',
       required: false,
       getComp: () => (
         <>
-          {state.triggerConditions.map((item, index) => (
+          {state.triggerConditions.map((item) => (
             <TriggerConditionSelect
+              keyOptions={alertTriggerConditions}
               key={item.id}
               id={item.id}
               updater={updater}
               current={state.triggerConditions.find((x) => x.id === item.id)}
               handleEditTriggerConditions={handleEditTriggerConditions}
               handleRemoveTriggerConditions={handleRemoveTriggerConditions}
-              triggerConditionKeys={alertTriggerConditions}
-              triggerOperators={alertTypes.operators}
-              handleAddTriggerConditions={handleAddTriggerConditions}
-              triggerConditionValues={state.triggerConditionValues}
-              alertTriggerConditionsContent={alertTriggerConditionsContent}
-              triggerConditions={state.triggerConditions}
-              isLast={state.triggerConditions.length - 1 === index}
+              operatorOptions={alertTypes.operators}
+              valueOptions={state.triggerConditionValueOptions}
+              valueOptionsList={alertTriggerConditionsContent}
             />
           ))}
         </>
@@ -623,7 +606,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       },
     },
   ];
-  console.log(state.triggerConditions, 888777);
+
   if (scopeType === ScopeType.ORG) {
     fieldsList.splice(1, 0, {
       label: i18n.t('org:alarm cluster'),
@@ -716,12 +699,18 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
 
   // 添加单条触发条件
   const handleAddTriggerConditions = () => {
+    const currentTriggerValues = alertTriggerConditionsContent
+      .find((item) => item.key === alertTriggerConditions?.[0]?.key)
+      .options.map((item) => ({ key: item, display: item }));
+
+    updater.triggerConditionValueOptions(currentTriggerValues);
+
     updater.triggerConditions([
       {
         id: uniqueId(),
-        condition: state.triggerConditionKeys[0]?.key,
-        operator: state.triggerOperators[0]?.key,
-        value: state.triggerConditionValues[0]?.key,
+        condition: alertTriggerConditions[0]?.key,
+        operator: alertTypes.operators?.[0]?.key,
+        value: currentTriggerValues[0]?.key,
       },
       ...state.triggerConditions,
     ]);

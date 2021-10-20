@@ -1,46 +1,37 @@
 import React from 'react';
 import { map } from 'lodash';
-import { mockTriggerConditionKeys, mockTriggerConditionOperators, mockTriggerConditionValues } from './mock';
-import { AddOne as IconAddOne, ReduceOne as IconReduceOne } from '@icon-park/react';
-import { Button, Select } from 'core/nusi';
+import { ReduceOne as IconReduceOne } from '@icon-park/react';
+import { Select } from 'core/nusi';
 
 const { Option } = Select;
 
 export const TriggerConditionSelect = ({
+  keyOptions,
   id,
   current,
   handleEditTriggerConditions,
   handleRemoveTriggerConditions,
-  triggerOperators,
-  triggerConditionKeys,
-  triggerConditionValues,
-  handleAddTriggerConditions,
-  isLast,
+  operatorOptions,
+  valueOptions,
   updater,
-  triggerConditions,
-  alertTriggerConditionsContent,
+  valueOptionsList,
 }) => {
-  console.log({ triggerConditions, triggerConditionValues, current });
-  return triggerConditions.length === 0 ? (
-    <div>
-      <IconAddOne className="cursor-pointer" size="24" onClick={() => handleAddTriggerConditions()} />
-    </div>
-  ) : (
-    <div className="flex items-center">
+  return (
+    <div className="flex items-center mb-4">
       <Select
         className="mr-8"
-        value={current?.triggerConditionKey}
+        value={current?.condition}
         onSelect={(value) => {
-          handleEditTriggerConditions(id, { key: 'triggerConditionKey', value });
-          updater.triggerConditionValues(
-            alertTriggerConditionsContent
-              .find((item) => item.key === value)
-              .options.map((item) => ({ key: item, display: item })),
-          ); // TODO:这里的 mockTriggerConditionValues 改成从接口返回的列表
-          handleEditTriggerConditions(id, { key: 'triggerConditionValue', value: mockTriggerConditionValues[0]?.key });
+          handleEditTriggerConditions(id, { key: 'condition', value });
+          const foo = valueOptionsList
+            .find((item: { key: any }) => item.key === value)
+            .options.map((item: any) => ({ key: item, display: item }));
+
+          updater.triggerConditionValueOptions(foo);
+          handleEditTriggerConditions(id, { key: 'value', value: foo[0]?.key });
         }}
       >
-        {map(triggerConditionKeys, (item) => {
+        {map(keyOptions, (item) => {
           return (
             <Option key={item?.key} value={item?.key}>
               {item?.displayName}
@@ -50,10 +41,10 @@ export const TriggerConditionSelect = ({
       </Select>
       <Select
         className="mr-8"
-        value={current?.triggerConditionOperator}
-        onSelect={(value) => handleEditTriggerConditions(id, { key: 'triggerConditionOperator', value })}
+        value={current?.operator}
+        onSelect={(value) => handleEditTriggerConditions(id, { key: 'operator', value })}
       >
-        {map(triggerOperators, (item) => {
+        {map(operatorOptions, (item) => {
           return (
             <Option key={item.key} value={item.key}>
               {item.display}
@@ -63,10 +54,10 @@ export const TriggerConditionSelect = ({
       </Select>
       <Select
         placeholder="请选择对应值"
-        value={current?.triggerConditionValue}
-        onSelect={(value) => handleEditTriggerConditions(id, { key: 'triggerConditionValue', value })}
+        value={current?.value}
+        onSelect={(value) => handleEditTriggerConditions(id, { key: 'value', value })}
       >
-        {map(triggerConditionValues, (item) => {
+        {map(valueOptions, (item) => {
           return (
             <Option key={item?.key} value={item?.key}>
               {item?.display}
@@ -74,8 +65,7 @@ export const TriggerConditionSelect = ({
           );
         })}
       </Select>
-      <IconReduceOne className="cursor-pointer" size="16" onClick={() => handleRemoveTriggerConditions(id)} />
-      {isLast && <IconAddOne className="cursor-pointer" size="16" onClick={() => handleAddTriggerConditions()} />}
+      <IconReduceOne className="cursor-pointer ml-8" size="16" onClick={() => handleRemoveTriggerConditions(id)} />
     </div>
   );
 };
