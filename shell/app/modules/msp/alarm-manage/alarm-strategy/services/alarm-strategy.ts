@@ -83,8 +83,11 @@ export const getAlertTriggerConditions = (scopeType: string) => {
     .then((response: any) => response.body);
 };
 
-export const getAlertTriggerConditionsContent = () => {
-  return agent.get(`/api/alerts/conditions/value`).then((response: any) => response.body);
+export const getAlertTriggerConditionsContent = (params: COMMON_STRATEGY_NOTIFY.IAlertTriggerConditionQuery) => {
+  return agent
+    .get(`/api/alerts/conditions/value`)
+    .query(params)
+    .then((response: any) => response.body);
 };
 
 export const toggleAlert = ({ id, enable, tenantGroup }: { id: string; enable: boolean; tenantGroup: string }) => {

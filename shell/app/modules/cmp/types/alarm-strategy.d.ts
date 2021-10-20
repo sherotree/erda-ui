@@ -150,4 +150,10 @@ declare namespace COMMON_STRATEGY_NOTIFY {
     key: string;
     options: string[];
   }
+
+  interface IAlertTriggerConditionQuery {
+    projectId: string;
+    terminusKey: string;
+    scopeType: string;
+  }
 }

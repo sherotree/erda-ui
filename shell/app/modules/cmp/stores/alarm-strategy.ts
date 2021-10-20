@@ -98,8 +98,13 @@ const alarmStrategy = createStore({
       const alertTriggerConditions = await call(getAlertTriggerConditions, scopeType);
       update({ alertTriggerConditions });
     },
-    async getAlertTriggerConditionsContent({ call, update }) {
-      const alertTriggerConditionsContent = await call(getAlertTriggerConditionsContent);
+    async getAlertTriggerConditionsContent({ call, update, getParams }, { projectId, scopeType }) {
+      const { terminusKey } = getParams();
+      const alertTriggerConditionsContent = await call(getAlertTriggerConditionsContent, {
+        projectId,
+        scopeType,
+        terminusKey,
+      });
       update({ alertTriggerConditionsContent });
     },
   },

@@ -17,23 +17,33 @@ export const TriggerConditionSelect = ({
   handleAddTriggerConditions,
   isLast,
   updater,
+  triggerConditions,
+  alertTriggerConditionsContent,
 }) => {
-  return (
+  console.log({ triggerConditions, triggerConditionValues, current });
+  return triggerConditions.length === 0 ? (
+    <div>
+      <IconAddOne className="cursor-pointer" size="24" onClick={() => handleAddTriggerConditions()} />
+    </div>
+  ) : (
     <div className="flex items-center">
       <Select
         className="mr-8"
         value={current?.triggerConditionKey}
         onSelect={(value) => {
           handleEditTriggerConditions(id, { key: 'triggerConditionKey', value });
-
-          updater.triggerConditionValues(mockTriggerConditionValues); // TODO:这里的 mockTriggerConditionValues 改成从接口返回的列表
+          updater.triggerConditionValues(
+            alertTriggerConditionsContent
+              .find((item) => item.key === value)
+              .options.map((item) => ({ key: item, display: item })),
+          ); // TODO:这里的 mockTriggerConditionValues 改成从接口返回的列表
           handleEditTriggerConditions(id, { key: 'triggerConditionValue', value: mockTriggerConditionValues[0]?.key });
         }}
       >
         {map(triggerConditionKeys, (item) => {
           return (
             <Option key={item?.key} value={item?.key}>
-              {item?.display}
+              {item?.displayName}
             </Option>
           );
         })}
@@ -45,13 +55,14 @@ export const TriggerConditionSelect = ({
       >
         {map(triggerOperators, (item) => {
           return (
-            <Option key={item?.key} value={item?.key}>
-              {item?.display}
+            <Option key={item.key} value={item.key}>
+              {item.display}
             </Option>
           );
         })}
       </Select>
       <Select
+        placeholder="请选择对应值"
         value={current?.triggerConditionValue}
         onSelect={(value) => handleEditTriggerConditions(id, { key: 'triggerConditionValue', value })}
       >
