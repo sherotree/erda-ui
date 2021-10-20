@@ -58,6 +58,17 @@ export const toggleAlert = ({ id, enable }: { id: string; enable: boolean }) => 
     .then((response: any) => response.body);
 };
 
+export const getAlertTriggerConditions = (scopeType: string) => {
+  return agent
+    .get(`/api/alerts/conditions`)
+    .query({ scopeType })
+    .then((response: any) => response.body);
+};
+
+export const getAlertTriggerConditionsContent = () => {
+  return agent.get(`/api/alerts/conditions/value`).then((response: any) => response.body);
+};
+
 export const getClusterList = ({ orgId }: { orgId: number }) => {
   return agent
     .get('/api/clusters')

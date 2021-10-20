@@ -20,6 +20,8 @@ import {
   getAlertDetail,
   getAlerts,
   getAlertTypes,
+  getAlertTriggerConditions,
+  getAlertTriggerConditionsContent,
   toggleAlert,
 } from '../services/alarm-strategy';
 import { getApps } from 'common/services';
@@ -29,6 +31,8 @@ import { PAGINATION } from 'app/constants';
 interface IState {
   alertTypes: COMMON_STRATEGY_NOTIFY.IAlertType;
   alertList: COMMON_STRATEGY_NOTIFY.IAlert[];
+  alertTriggerConditions: COMMON_STRATEGY_NOTIFY.IAlertTriggerCondition[];
+  alertTriggerConditionsContent: COMMON_STRATEGY_NOTIFY.IAlertTriggerConditionContent[];
   alarmPaging: IPaging;
   alarmScopeMap: { [key: string]: string } | {};
 }
@@ -44,6 +48,8 @@ const initOrgState: IState = {
   alertList: [],
   alarmScopeMap: {},
   alarmPaging: defaultPaging,
+  alertTriggerConditions: [],
+  alertTriggerConditionsContent: [],
 };
 
 const alarmStrategy = createStore({
@@ -83,6 +89,14 @@ const alarmStrategy = createStore({
       const { tenantGroup } = getParams();
       await call(deleteAlert, { id, tenantGroup }, { successMsg: i18n.t('operated successfully') });
       await alarmStrategy.effects.getAlerts({ pageNo: 1 });
+    },
+    async getAlertTriggerConditions({ call, update }, scopeType: string) {
+      const alertTriggerConditions = await call(getAlertTriggerConditions, scopeType);
+      update({ alertTriggerConditions });
+    },
+    async getAlertTriggerConditionsContent({ call, update }) {
+      const alertTriggerConditionsContent = await call(getAlertTriggerConditionsContent);
+      update({ alertTriggerConditionsContent });
     },
     async getAlarmScopes({ call, update, getParams }) {
       const { projectId } = getParams();

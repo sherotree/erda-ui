@@ -92,12 +92,15 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
   const roleMap = memberStore.useStore((s) => s.roleMap);
   const { getRoleMap } = memberStore.effects;
   const alarmStrategyStore = alarmStrategyStoreMap[scopeType];
-  const [alertList, alarmPaging, alarmScopeMap, alertTypes] = alarmStrategyStore.useStore((s) => [
-    s.alertList,
-    s.alarmPaging,
-    s.alarmScopeMap,
-    s.alertTypes,
-  ]);
+  const [alertList, alarmPaging, alarmScopeMap, alertTypes, alertTriggerConditions, alertTriggerConditionsContent] =
+    alarmStrategyStore.useStore((s) => [
+      s.alertList,
+      s.alarmPaging,
+      s.alarmScopeMap,
+      s.alertTypes,
+      s.alertTriggerConditions,
+      s.alertTriggerConditionsContent,
+    ]);
   const { total, pageNo, pageSize } = alarmPaging;
   const orgId = orgStore.getState((s) => s.currentOrg.id);
   const [getAlertDetailLoading, getAlertsLoading, toggleAlertLoading] = useLoading(alarmStrategyStore, [
@@ -105,8 +108,18 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     'getAlerts',
     'toggleAlert',
   ]);
-  const { getAlerts, createAlert, editAlert, toggleAlert, deleteAlert, getAlertDetail, getAlarmScopes, getAlertTypes } =
-    alarmStrategyStore.effects;
+  const {
+    getAlerts,
+    createAlert,
+    editAlert,
+    toggleAlert,
+    deleteAlert,
+    getAlertDetail,
+    getAlarmScopes,
+    getAlertTypes,
+    getAlertTriggerConditions,
+    getAlertTriggerConditionsContent,
+  } = alarmStrategyStore.effects;
   const { clearAlerts } = alarmStrategyStore.reducers;
   const { getNotifyGroups } = notifyGroupStore.effects;
   const notifyGroups = notifyGroupStore.useStore((s) => s.notifyGroups);
@@ -162,6 +175,8 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     getSMSNotifyConfig({ orgId });
     getAlerts();
     getAlarmScopes();
+    getAlertTriggerConditions(scopeType);
+    getAlertTriggerConditionsContent();
     getAlertTypes();
     getNotifyGroups(payload);
     getRoleMap({ scopeType, scopeId: scopeType === ScopeType.MSP ? commonPayload?.scopeId : scopeId });
@@ -446,6 +461,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     {
       label: i18n.d('触发条件'),
       name: 'triggerConditions',
+      required: false,
       getComp: () => (
         <>
           {state.triggerConditions.map((item, index) => (
@@ -529,53 +545,54 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       type: 'radioGroup',
       options: map(SILENCE_PERIOD_POLICY_MAP, (name, value) => ({ name, value })),
     },
-    {
-      label: i18n.d('org:select group'),
-      name: 'groupId',
-      getComp: () => NotifyGroupSelect(),
-    },
+    // TODO: 通知策略
     // {
-    //   label: i18n.t('org:select group'),
+    //   label: i18n.d('org:select group'),
     //   name: 'groupId',
-    //   initialValue: state.activedGroupId,
-    //   config: {
-    //     valuePropType: 'array',
-    //   },
-    //   getComp: ({ form }: { form: FormInstance }) => {
-    //     return (
-    //       <Select
-    //         onSelect={(id: any) => {
-    //           form.setFieldsValue({ groupType: [], groupId: id });
-    //           updater.activedGroupId(id);
-    //         }}
-    //         dropdownRender={(menu) => (
-    //           <div>
-    //             {menu}
-    //             <Divider className="my-1" />
-    //             <div className="text-xs px-2 py-1 text-desc" onMouseDown={(e) => e.preventDefault()}>
-    //               <WithAuth pass={addNotificationGroupAuth}>
-    //                 <span
-    //                   className="hover-active"
-    //                   onClick={() => {
-    //                     goTo(notifyGroupPage[scopeType], { projectId: scopeId, ...params });
-    //                   }}
-    //                 >
-    //                   {i18n.t('org:add more notification groups')}
-    //                 </span>
-    //               </WithAuth>
-    //             </div>
-    //           </div>
-    //         )}
-    //       >
-    //         {map(notifyGroups, ({ id, name }) => (
-    //           <Option key={id} value={id}>
-    //             {name}
-    //           </Option>
-    //         ))}
-    //       </Select>
-    //     );
-    //   },
+    //   getComp: () => NotifyGroupSelect(),
     // },
+    {
+      label: i18n.t('org:select group'),
+      name: 'groupId',
+      initialValue: state.activedGroupId,
+      config: {
+        valuePropType: 'array',
+      },
+      getComp: ({ form }: { form: FormInstance }) => {
+        return (
+          <Select
+            onSelect={(id: any) => {
+              form.setFieldsValue({ groupType: [], groupId: id });
+              updater.activedGroupId(id);
+            }}
+            dropdownRender={(menu) => (
+              <div>
+                {menu}
+                <Divider className="my-1" />
+                <div className="text-xs px-2 py-1 text-desc" onMouseDown={(e) => e.preventDefault()}>
+                  <WithAuth pass={addNotificationGroupAuth}>
+                    <span
+                      className="hover-active"
+                      onClick={() => {
+                        goTo(notifyGroupPage[scopeType], { projectId: scopeId, ...params });
+                      }}
+                    >
+                      {i18n.t('org:add more notification groups')}
+                    </span>
+                  </WithAuth>
+                </div>
+              </div>
+            )}
+          >
+            {map(notifyGroups, ({ id, name }) => (
+              <Option key={id} value={id}>
+                {name}
+              </Option>
+            ))}
+          </Select>
+        );
+      },
+    },
   ];
 
   if (scopeType === ScopeType.ORG) {
@@ -715,7 +732,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       },
     });
   };
-  console.log(state.editingFormRule, state.editingRules, { alertTypes }, 6677);
+  // console.log(state.editingFormRule, state.editingRules, { alertTypes }, 6677);
   const handleEditALarm = (id: number) => {
     getAlertDetail(id).then(({ name, clusterNames, appIds, rules, notifies }: any) => {
       updater.editingFormRule({
@@ -875,7 +892,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       },
     },
   ];
-
+  console.log(operatorMap, 11111);
   return (
     <div className="alarm-strategy">
       <div className="top-button-group">

@@ -76,6 +76,17 @@ export const getAlertTypes = (tenantGroup: string): COMMON_STRATEGY_NOTIFY.IAler
     .then((response: any) => response.body);
 };
 
+export const getAlertTriggerConditions = (scopeType: string) => {
+  return agent
+    .get(`/api/alerts/conditions`)
+    .query({ scopeType })
+    .then((response: any) => response.body);
+};
+
+export const getAlertTriggerConditionsContent = () => {
+  return agent.get(`/api/alerts/conditions/value`).then((response: any) => response.body);
+};
+
 export const toggleAlert = ({ id, enable, tenantGroup }: { id: string; enable: boolean; tenantGroup: string }) => {
   return agent
     .put(`/api/tmc/micro-service/tenantGroup/${tenantGroup}/alerts/${id}/switch`)

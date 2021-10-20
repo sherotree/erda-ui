@@ -140,4 +140,14 @@ declare namespace COMMON_STRATEGY_NOTIFY {
     aggregator: IKeyDisplay[];
     silence: ISlience[];
   }
+
+  interface IAlertTriggerCondition {
+    key: string;
+    displayName: string;
+  }
+
+  interface IAlertTriggerConditionContent {
+    key: string;
+    options: string[];
+  }
 }

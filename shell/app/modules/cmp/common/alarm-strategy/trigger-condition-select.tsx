@@ -1,6 +1,7 @@
 import React from 'react';
 import { map } from 'lodash';
 import { mockTriggerConditionKeys, mockTriggerConditionOperators, mockTriggerConditionValues } from './mock';
+import { AddOne as IconAddOne, ReduceOne as IconReduceOne } from '@icon-park/react';
 import { Button, Select } from 'core/nusi';
 
 const { Option } = Select;
@@ -16,10 +17,9 @@ export const TriggerConditionSelect = ({
   handleAddTriggerConditions,
   isLast,
   updater,
-  showSubtract,
 }) => {
   return (
-    <div className="flex">
+    <div className="flex items-center">
       <Select
         className="mr-8"
         value={current?.triggerConditionKey}
@@ -63,16 +63,8 @@ export const TriggerConditionSelect = ({
           );
         })}
       </Select>
-      {showSubtract && <Button onClick={() => handleRemoveTriggerConditions(id)}>-</Button>}
-      {isLast && (
-        <Button
-          onClick={() => {
-            handleAddTriggerConditions();
-          }}
-        >
-          +
-        </Button>
-      )}
+      <IconReduceOne className="cursor-pointer" size="16" onClick={() => handleRemoveTriggerConditions(id)} />
+      {isLast && <IconAddOne className="cursor-pointer" size="16" onClick={() => handleAddTriggerConditions()} />}
     </div>
   );
 };
