@@ -182,6 +182,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     activedGroupId: undefined,
     triggerConditionValueOptions: [],
     triggerConditions: [],
+    notifiesFoo: [],
     fooOptions: [],
     notifyLevel: null,
     notifyMethod: null,
@@ -571,7 +572,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       name: 'notifiesFoo',
       getComp: ({ form }: { form: FormInstance }) => (
         <>
-          {state.editingFormRule?.notifiesFoo?.map((item) => (
+          {state.notifiesFoo?.map((item) => (
             <NotifyStrategySelect
               form={form}
               alertLevelOptions={alertLevelOptions}
@@ -584,7 +585,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
               key={item.id}
               id={item.id}
               updater={updater}
-              current={state.editingFormRule?.notifiesFoo?.find((x) => x.id === item.id)}
+              current={state.notifiesFoo?.find((x) => x.id === item.id)}
               handleEditNotifyStrategy={handleEditNotifyStrategy}
               handleRemoveNotifyStrategy={handleRemoveNotifyStrategy}
               valueOptions={state.fooOptions}
@@ -721,18 +722,15 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
         display: x.name,
       })) || [];
     updater.fooOptions(fooOptions);
-    updater.editingFormRule({
-      ...state.editingFormRule,
-      notifiesFoo: [
-        {
-          id: uniqueId(),
-          condition: notifyGroups[0]?.id,
-          operator: alertLevelOptions?.[0]?.key,
-          value: fooOptions[0]?.key,
-        },
-        ...(state.editingFormRule.notifiesFoo || []),
-      ],
-    });
+    updater.notifiesFoo([
+      {
+        id: uniqueId(),
+        condition: notifyGroups[0]?.id,
+        operator: alertLevelOptions?.[0]?.key,
+        value: fooOptions[0]?.key,
+      },
+      ...(state.notifiesFoo || []),
+    ]);
     // updater.notifiesFoo([
     //   {
     //     id: uniqueId(),
@@ -753,24 +751,17 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
   // 移除策略
   const handleRemoveNotifyStrategy = (id: string) => {
     // updater.notifiesFoo(filter(state.notifiesFoo, (item) => item.id !== id));
-    updater.editingFormRule({
-      ...state.editingFormRule,
-      notifiesFoo: filter(state.editingFormRule.notifiesFoo, (item) => item.id !== id),
-    });
+    updater.notifiesFoo(filter(state.notifiesFoo, (item) => item.id !== id));
   };
 
   // 编辑单条触发条件
   const handleEditNotifyStrategy = (id: string, item: { key: string; value: any }) => {
-    const rules = cloneDeep(state.editingFormRule.notifiesFoo);
+    const rules = cloneDeep(state.notifiesFoo);
     const rule = find(rules, { id });
     const index = findIndex(rules, { id });
 
     fill(rules, { id, ...rule, [item.key]: item.value }, index, index + 1);
-    // updater.notifiesFoo(rules);
-    updater.editingFormRule({
-      ...state.editingFormRule,
-      notifiesFoo: rules,
-    });
+    updater.notifiesFoo(rules);
   };
 
   // 编辑单条触发条件
