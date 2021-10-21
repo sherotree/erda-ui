@@ -182,7 +182,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     activedGroupId: undefined,
     triggerConditionValueOptions: [],
     triggerConditions: [],
-    notifiesFoo: [],
+    notifies: [],
     fooOptions: [],
     notifyLevel: null,
     notifyMethod: null,
@@ -569,10 +569,10 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
         </div>
       ),
       required: false,
-      name: 'notifiesFoo',
+      name: 'notifies',
       getComp: ({ form }: { form: FormInstance }) => (
         <>
-          {state.notifiesFoo?.map((item) => (
+          {state.notifies?.map((item) => (
             <NotifyStrategySelect
               form={form}
               alertLevelOptions={alertLevelOptions}
@@ -585,7 +585,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
               key={item.id}
               id={item.id}
               updater={updater}
-              current={state.notifiesFoo?.find((x) => x.id === item.id)}
+              current={state.notifies?.find((x) => x.id === item.id)}
               handleEditNotifyStrategy={handleEditNotifyStrategy}
               handleRemoveNotifyStrategy={handleRemoveNotifyStrategy}
               valueOptions={state.fooOptions}
@@ -722,23 +722,23 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
         display: x.name,
       })) || [];
     updater.fooOptions(fooOptions);
-    updater.notifiesFoo([
+    updater.notifies([
       {
         id: uniqueId(),
         condition: notifyGroups[0]?.id,
         operator: alertLevelOptions?.[0]?.key,
         value: fooOptions[0]?.key,
       },
-      ...(state.notifiesFoo || []),
+      ...(state.notifies || []),
     ]);
-    // updater.notifiesFoo([
+    // updater.notifies([
     //   {
     //     id: uniqueId(),
     //     condition: notifyGroups[0]?.id,
     //     operator: alertLevelOptions?.[0]?.key,
     //     value: fooOptions[0]?.key,
     //   },
-    //   ...state.notifiesFoo,
+    //   ...state.notifies,
     // ]);
   };
 
@@ -750,18 +750,18 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
 
   // 移除策略
   const handleRemoveNotifyStrategy = (id: string) => {
-    // updater.notifiesFoo(filter(state.notifiesFoo, (item) => item.id !== id));
-    updater.notifiesFoo(filter(state.notifiesFoo, (item) => item.id !== id));
+    // updater.notifies(filter(state.notifies, (item) => item.id !== id));
+    updater.notifies(filter(state.notifies, (item) => item.id !== id));
   };
 
   // 编辑单条触发条件
   const handleEditNotifyStrategy = (id: string, item: { key: string; value: any }) => {
-    const rules = cloneDeep(state.notifiesFoo);
+    const rules = cloneDeep(state.notifies);
     const rule = find(rules, { id });
     const index = findIndex(rules, { id });
 
     fill(rules, { id, ...rule, [item.key]: item.value }, index, index + 1);
-    updater.notifiesFoo(rules);
+    updater.notifies(rules);
   };
 
   // 编辑单条触发条件
@@ -828,7 +828,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       //     groupType: groupType.join(','),
       //   },
       // ],
-      // triggerConditons: state.editingFormRule.triggerConditions,
+      // triggerConditons: state.triggerConditions,
     };
 
     if (!isEmpty(state.editingFormRule)) {
