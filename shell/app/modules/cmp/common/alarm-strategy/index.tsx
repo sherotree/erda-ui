@@ -509,54 +509,6 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       type: 'radioGroup',
       options: map(SILENCE_PERIOD_POLICY_MAP, (name, value) => ({ name, value })),
     },
-    // TODO: 通知策略
-    // {
-    //   label: i18n.d('org:select group'),
-    //   name: 'groupId',
-    //   getComp: () => NotifyGroupSelect(),
-    // },
-    // {
-    //   label: i18n.t('org:select group'),
-    //   name: 'groupId',
-    //   initialValue: state.activedGroupId,
-    //   config: {
-    //     valuePropType: 'array',
-    //   },
-    //   getComp: ({ form }: { form: FormInstance }) => {
-    //     return (
-    //       <Select
-    //         onSelect={(id: any) => {
-    //           form.setFieldsValue({ groupType: [], groupId: id });
-    //           updater.activedGroupId(id);
-    //         }}
-    //         dropdownRender={(menu) => (
-    //           <div>
-    //             {menu}
-    //             <Divider className="my-1" />
-    //             <div className="text-xs px-2 py-1 text-desc" onMouseDown={(e) => e.preventDefault()}>
-    //               <WithAuth pass={addNotificationGroupAuth}>
-    //                 <span
-    //                   className="hover-active"
-    //                   onClick={() => {
-    //                     goTo(notifyGroupPage[scopeType], { projectId: scopeId, ...params });
-    //                   }}
-    //                 >
-    //                   {i18n.t('org:add more notification groups')}
-    //                 </span>
-    //               </WithAuth>
-    //             </div>
-    //           </div>
-    //         )}
-    //       >
-    //         {map(notifyGroups, ({ id, name }) => (
-    //           <Option key={id} value={id}>
-    //             {name}
-    //           </Option>
-    //         ))}
-    //       </Select>
-    //     );
-    //   },
-    // },
     {
       label: (
         <div>
@@ -570,11 +522,10 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       ),
       required: false,
       name: 'notifies',
-      getComp: ({ form }: { form: FormInstance }) => (
+      getComp: () => (
         <>
           {state.notifies?.map((item) => (
             <NotifyStrategySelect
-              form={form}
               alertLevelOptions={alertLevelOptions}
               goToFoo={() => {
                 goTo(notifyGroupPage[scopeType], { projectId: scopeId, ...params });
@@ -622,24 +573,6 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       },
     });
   }
-
-  // if (state.activedGroupId) {
-  //   const activedGroup = find(notifyGroups, ({ id }) => id === state.activedGroupId);
-  //   fieldsList = [
-  //     ...fieldsList,
-  //     {
-  //       name: 'groupType',
-  //       label: i18n.t('application:notification method'),
-  //       required: true,
-  //       type: 'select',
-  //       initialValue: state.editingFormRule.notifies ? state.editingFormRule.notifies[0].groupType.split(',') : [],
-  //       options: (activedGroup && notifyChannelMap[activedGroup.targets[0].type]) || [],
-  //       itemProps: {
-  //         mode: 'multiple',
-  //       },
-  //     },
-  //   ];
-  // }
 
   // 添加集合的规则
   const handleClickAlertType = (val: string) => {
@@ -701,16 +634,6 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       },
       ...(state.triggerConditions || []),
     ]);
-
-    // updater.triggerConditions([
-    //   {
-    //     id: uniqueId(),
-    //     condition: alertTriggerConditions[0]?.key,
-    //     operator: alertTypes.operators?.[0]?.key,
-    //     value: currentTriggerValues[0]?.key,
-    //   },
-    //   ...state.triggerConditions,
-    // ]);
   };
 
   // 添加单条触发条件
@@ -726,31 +649,20 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       {
         id: uniqueId(),
         groupId: notifyGroups[0]?.id,
-        level: alertLevelOptions?.[0]?.key,
-        groupType: fooOptions[0]?.key,
+        level: [alertLevelOptions?.[0]?.key],
+        groupType: [fooOptions[0]?.key],
       },
       ...(state.notifies || []),
     ]);
-    // updater.notifies([
-    //   {
-    //     id: uniqueId(),
-    //     condition: notifyGroups[0]?.id,
-    //     operator: alertLevelOptions?.[0]?.key,
-    //     value: fooOptions[0]?.key,
-    //   },
-    //   ...state.notifies,
-    // ]);
   };
 
   // 移除表格编辑中的规则
   const handleRemoveTriggerConditions = (id: string) => {
-    // updater.triggerConditions(filter(state.triggerConditions, (item) => item.id !== id));
     updater.triggerConditions(filter(state.triggerConditions, (item) => item.id !== id));
   };
 
   // 移除策略
   const handleRemoveNotifyStrategy = (id: string) => {
-    // updater.notifies(filter(state.notifies, (item) => item.id !== id));
     updater.notifies(filter(state.notifies, (item) => item.id !== id));
   };
 
@@ -793,7 +705,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       },
     });
   };
-  // console.log(state.editingFormRule, state.editingRules, { alertTypes }, 6677);
+
   const handleEditALarm = (id: number) => {
     getAlertDetail(id).then(({ name, clusterNames, appIds, rules, notifies }: any) => {
       updater.editingFormRule({
@@ -811,7 +723,9 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
   };
 
   const handleAddAlarm = (param: any) => {
-    const { name, clusterName, appId, groupId, groupType, silence, silencePolicy } = param;
+    const { name, clusterName, appId, silence = '', silencePolicy } = param;
+    const [value, unit] = silence.split('-');
+
     const payload: COMMON_STRATEGY_NOTIFY.IAlertBody = {
       name,
       clusterNames: clusterName,
@@ -820,13 +734,20 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       rules: map(state.editingRules, ({ key, ...rest }) => rest),
       notifies: state.notifies.map((item) => ({
-        ...item,
-        silence,
-        silencePolicy,
-        groupType: item.groupType.join(','),
-        level: item.level.join(','),
+        silence: {
+          value: Number(value),
+          unit,
+          policy: silencePolicy,
+        },
+        groupId: item?.groupId,
+        groupType: item?.groupType?.join(','),
+        level: item?.level?.join(','),
       })),
-      triggerConditions: state.triggerConditions,
+      triggerConditions: state.triggerConditions.map((x) => ({
+        condition: x.condition,
+        operator: x.operator,
+        value: x.value,
+      })),
     };
 
     if (!isEmpty(state.editingFormRule)) {

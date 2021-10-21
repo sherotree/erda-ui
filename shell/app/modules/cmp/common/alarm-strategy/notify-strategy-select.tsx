@@ -13,7 +13,6 @@ export const NotifyStrategySelect = ({
   handleEditNotifyStrategy,
   valueOptions,
   updater,
-  form,
   addNotificationGroupAuth,
   goToFoo,
   notifyGroups,
@@ -27,7 +26,6 @@ export const NotifyStrategySelect = ({
         className="mr-8"
         value={current?.groupId}
         onSelect={(groupId: any) => {
-          form.setFieldsValue({ groupType: [], groupId: id });
           updater.activedGroupId(groupId);
           handleEditNotifyStrategy(id, { key: 'groupId', value: groupId });
           const activedGroup = find(notifyGroups, ({ id: id2 }) => id2 === groupId);
@@ -78,8 +76,8 @@ export const NotifyStrategySelect = ({
       <Select
         placeholder="请选择对应值"
         value={current?.groupType}
+        onChange={(value) => handleEditNotifyStrategy(id, { key: 'groupType', value })}
         mode="multiple"
-        onSelect={(value) => handleEditNotifyStrategy(id, { key: 'groupType', value })}
       >
         {map(valueOptions, (item) => {
           return (
