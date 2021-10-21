@@ -38,12 +38,6 @@ import orgStore from 'app/org-home/stores/org';
 import './index.scss';
 import routeInfoStore from 'core/stores/route';
 import { AddOne as IconAddOne, ReduceOne as IconReduceOne } from '@icon-park/react';
-import {
-  mockNotifyStrategy,
-  mockTriggerConditionKeys,
-  mockTriggerConditionOperators,
-  mockTriggerConditionValues,
-} from './mock';
 import { TriggerConditionSelect } from './trigger-condition-select';
 import { NotifyStrategySelect } from './notify-strategy-select';
 
@@ -142,11 +136,11 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
   const alertTriggerConditionsContent = [
     {
       key: 'application_name',
-      options: ['go-demo', 'test', 'dev'],
+      options: ['go-demo1', 'test', 'dev'],
     },
     {
       key: 'service_name',
-      options: ['go-demo', 'foo1', 'foo2', 'foo3'],
+      options: ['go-demo2', 'foo1', 'foo2', 'foo3'],
     },
   ];
 
@@ -187,6 +181,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     editingFormRule: {},
     activedGroupId: undefined,
     triggerConditionValueOptions: [],
+    triggerConditions: [],
     fooOptions: [],
     notifyLevel: null,
     notifyMethod: null,
@@ -434,13 +429,13 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       required: false,
       getComp: () => (
         <>
-          {state.editingFormRule?.triggerConditions?.map((item) => (
+          {state.triggerConditions?.map((item) => (
             <TriggerConditionSelect
               keyOptions={alertTriggerConditions}
               key={item.id}
               id={item.id}
               updater={updater}
-              current={state.editingFormRule?.triggerConditions?.find((x) => x.id === item.id)}
+              current={state.triggerConditions?.find((x) => x.id === item.id)}
               handleEditTriggerConditions={handleEditTriggerConditions}
               handleRemoveTriggerConditions={handleRemoveTriggerConditions}
               operatorOptions={alertTypes.operators}
@@ -696,18 +691,15 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       .options.map((item) => ({ key: item, display: item }));
 
     updater.triggerConditionValueOptions(currentTriggerValues);
-    updater.editingFormRule({
-      ...state.editingFormRule,
-      triggerConditions: [
-        {
-          id: uniqueId(),
-          condition: alertTriggerConditions[0]?.key,
-          operator: alertTypes.operators?.[0]?.key,
-          value: currentTriggerValues[0]?.key,
-        },
-        ...(state.editingFormRule.triggerConditions || []),
-      ],
-    });
+    updater.triggerConditions([
+      {
+        id: uniqueId(),
+        condition: alertTriggerConditions[0]?.key,
+        operator: alertTypes.operators?.[0]?.key,
+        value: currentTriggerValues[0]?.key,
+      },
+      ...(state.triggerConditions || []),
+    ]);
 
     // updater.triggerConditions([
     //   {
@@ -755,10 +747,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
   // 移除表格编辑中的规则
   const handleRemoveTriggerConditions = (id: string) => {
     // updater.triggerConditions(filter(state.triggerConditions, (item) => item.id !== id));
-    updater.editingFormRule({
-      ...state.editingFormRule,
-      triggerConditions: filter(state.editingFormRule.triggerConditions, (item) => item.id !== id),
-    });
+    updater.triggerConditions(filter(state.triggerConditions, (item) => item.id !== id));
   };
 
   // 移除策略
@@ -786,16 +775,12 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
 
   // 编辑单条触发条件
   const handleEditTriggerConditions = (id: string, item: { key: string; value: any }) => {
-    const rules = cloneDeep(state.editingFormRule.triggerConditions);
+    const rules = cloneDeep(state.triggerConditions);
     const rule = find(rules, { id });
     const index = findIndex(rules, { id });
 
     fill(rules, { id, ...rule, [item.key]: item.value }, index, index + 1);
-    // updater.triggerConditions(rules);
-    updater.editingFormRule({
-      ...state.editingFormRule,
-      triggerConditions: rules,
-    });
+    updater.triggerConditions(rules);
   };
 
   // 编辑单条规则下的指标
@@ -855,7 +840,6 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       // triggerConditons: state.editingFormRule.triggerConditions,
     };
 
-    console.log(1111);
     if (!isEmpty(state.editingFormRule)) {
       editAlert({ body: payload, id: state.editingFormRule.id });
     } else {
