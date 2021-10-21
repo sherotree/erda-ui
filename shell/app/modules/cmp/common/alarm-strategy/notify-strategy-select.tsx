@@ -25,11 +25,11 @@ export const NotifyStrategySelect = ({
     <div className="flex items-center mb-4">
       <Select
         className="mr-8"
-        value={current?.condition}
+        value={current?.groupId}
         onSelect={(groupId: any) => {
           form.setFieldsValue({ groupType: [], groupId: id });
           updater.activedGroupId(groupId);
-          handleEditNotifyStrategy(id, { key: 'condition', value: groupId });
+          handleEditNotifyStrategy(id, { key: 'groupId', value: groupId });
           const activedGroup = find(notifyGroups, ({ id: id2 }) => id2 === groupId);
           const fooOptions =
             (activedGroup && notifyChannelMap[activedGroup.targets[0].type]).map((x) => ({
@@ -38,7 +38,7 @@ export const NotifyStrategySelect = ({
             })) || [];
 
           updater.fooOptions(fooOptions);
-          handleEditNotifyStrategy(id, { key: 'value', value: fooOptions?.[0]?.key });
+          handleEditNotifyStrategy(id, { key: 'groupType', value: fooOptions?.[0]?.key });
         }}
         dropdownRender={(menu) => (
           <div>
@@ -63,8 +63,9 @@ export const NotifyStrategySelect = ({
 
       <Select
         className="mr-8"
-        value={current?.operator}
-        onSelect={(value) => handleEditNotifyStrategy(id, { key: 'operator', value })}
+        value={current?.level}
+        onChange={(value) => handleEditNotifyStrategy(id, { key: 'level', value })}
+        mode="multiple"
       >
         {map(alertLevelOptions, (item) => {
           return (
@@ -76,8 +77,9 @@ export const NotifyStrategySelect = ({
       </Select>
       <Select
         placeholder="请选择对应值"
-        value={current?.value}
-        onSelect={(value) => handleEditNotifyStrategy(id, { key: 'value', value })}
+        value={current?.groupType}
+        mode="multiple"
+        onSelect={(value) => handleEditNotifyStrategy(id, { key: 'groupType', value })}
       >
         {map(valueOptions, (item) => {
           return (

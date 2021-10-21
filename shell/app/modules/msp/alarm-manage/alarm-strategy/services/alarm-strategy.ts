@@ -78,14 +78,14 @@ export const getAlertTypes = (tenantGroup: string): COMMON_STRATEGY_NOTIFY.IAler
 
 export const getAlertTriggerConditions = (scopeType: string) => {
   return agent
-    .get(`/api/alerts/conditions`)
+    .get(`/api/msp/alerts/conditions`)
     .query({ scopeType })
     .then((response: any) => response.body);
 };
 
 export const getAlertTriggerConditionsContent = (params: COMMON_STRATEGY_NOTIFY.IAlertTriggerConditionQuery) => {
   return agent
-    .get(`/api/alerts/conditions/value`)
+    .get(`/api/msp/alerts/conditions/value`)
     .query(params)
     .then((response: any) => response.body);
 };

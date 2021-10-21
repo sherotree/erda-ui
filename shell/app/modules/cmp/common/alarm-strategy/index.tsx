@@ -725,9 +725,9 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     updater.notifies([
       {
         id: uniqueId(),
-        condition: notifyGroups[0]?.id,
-        operator: alertLevelOptions?.[0]?.key,
-        value: fooOptions[0]?.key,
+        groupId: notifyGroups[0]?.id,
+        level: alertLevelOptions?.[0]?.key,
+        groupType: fooOptions[0]?.key,
       },
       ...(state.notifies || []),
     ]);
@@ -812,7 +812,6 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
 
   const handleAddAlarm = (param: any) => {
     const { name, clusterName, appId, groupId, groupType, silence, silencePolicy } = param;
-    console.log(9999999);
     const payload: COMMON_STRATEGY_NOTIFY.IAlertBody = {
       name,
       clusterNames: clusterName,
@@ -820,21 +819,19 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       domain: location.origin,
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       rules: map(state.editingRules, ({ key, ...rest }) => rest),
-      // notifies: [
-      //   {
-      //     silence: { value: Number(silence.split('-')[0]), unit: silenceMap[silence].key, policy: silencePolicy },
-      //     type: 'notify_group',
-      //     groupId,
-      //     groupType: groupType.join(','),
-      //   },
-      // ],
-      // triggerConditons: state.triggerConditions,
+      notifies: state.notifies.map((item) => ({
+        ...item,
+        silence,
+        silencePolicy,
+        groupType: item.groupType.join(','),
+        level: item.level.join(','),
+      })),
+      triggerConditions: state.triggerConditions,
     };
 
     if (!isEmpty(state.editingFormRule)) {
       editAlert({ body: payload, id: state.editingFormRule.id });
     } else {
-      console.log({ payload });
       createAlert(payload);
     }
     handleCloseModal();
