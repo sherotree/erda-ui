@@ -46,6 +46,7 @@ export const updateNotifyGroups = ({ id, ...rest }: COMMON_NOTIFY.ICreateNotifyG
 // notify channels
 // payload:
 export const getNotifyChannels = (payload: { page: number; pageSize: number }) => {
+  console.log(payload, 1111);
   return agent
     .get('/api/notify-channels')
     .query(payload)

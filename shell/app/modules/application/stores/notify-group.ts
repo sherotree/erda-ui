@@ -72,9 +72,8 @@ const notifyGroup = createStore({
       });
     },
     async getNotifyChannels({ call }, payload: { page: number; pageSize: number }) {
-      const data = await call(getNotifyChannels, payload, {
-        paging: { key: 'paging', listKey: 'channels' },
-      });
+      console.log(payload);
+      const data = await call(getNotifyChannels, payload);
       return data;
     },
   },

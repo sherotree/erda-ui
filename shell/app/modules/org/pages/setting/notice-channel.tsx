@@ -115,7 +115,8 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
   const roleMap = memberStore.useStore((s) => s.roleMap);
   const { getRoleMap } = memberStore.effects;
 
-  const { getNotifyGroups, deleteNotifyGroups, createNotifyGroups, updateNotifyGroups } = notifyGroupStore.effects;
+  const { getNotifyGroups, deleteNotifyGroups, createNotifyGroups, updateNotifyGroups, getNotifyChannels } =
+    notifyGroupStore.effects;
   const { clearNotifyGroups } = notifyGroupStore.reducers;
   const [loading] = useLoading(notifyGroupStore, ['getNotifyGroups']);
   const [visible, setIsVisible] = React.useState(false);
@@ -150,6 +151,7 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
 
   const handleGetNotifyGroups = (payload?: COMMON_NOTIFY.IGetNotifyGroupQuery) => {
     getNotifyGroups({ ...commonPayload, ...payload });
+    getNotifyChannels({ page: 1, pageSize: 15 });
   };
 
   const handleEdit = ({ name, targets, id }: COMMON_NOTIFY.INotifyGroup) => {

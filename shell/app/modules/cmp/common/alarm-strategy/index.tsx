@@ -375,37 +375,40 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
         </div>
       ),
     },
-    // {
-    //   title: i18n.t('告警级别'),
-    //   dataIndex: 'level',
-    //   width: 105,
-    //   render: (item) => (
-    //     <Select
-    //       className="operator mr-2"
-    //       defaultValue={item}
-    //       onSelect={(value: any) => {
-    //         // handleEditEditingRuleField(key, index, { key: 'operator', value: String(value) });
-    //       }}
-    //     >
-    //       {map(operatorMap, (name, _key) => (
-    //         <Option key={_key} value={_key}>
-    //           {name}
-    //         </Option>
-    //       ))}
-    //     </Select>
-    //   ),
-    // },
-    // {
-    //   title: i18n.d('触发恢复'),
-    //   dataIndex: 'isRecover',
-    //   width: 105,
-    //   render: (isRecover: boolean, { key }: COMMON_STRATEGY_NOTIFY.IFormRule) => (
-    //     <Switch
-    //       checked={isRecover}
-    //       onChange={(checked) => handleEditEditingRule(key, { key: 'isRecover', value: checked })}
-    //     />
-    //   ),
-    // },
+    {
+      title: i18n.t('告警级别'),
+      dataIndex: 'level',
+      width: 105,
+      render: (item) => (
+        <Select
+          className="operator mr-2"
+          defaultValue={item}
+          onSelect={(value: any) => {
+            // handleEditEditingRuleField(key, index, { key: 'operator', value: String(value) });
+          }}
+        >
+          {map(operatorMap, (name, _key) => (
+            <Option key={_key} value={_key}>
+              {name}
+            </Option>
+          ))}
+        </Select>
+      ),
+    },
+    {
+      title: i18n.d('触发恢复'),
+      dataIndex: 'isRecover',
+      width: 105,
+      render: (isRecover: boolean, { key }: COMMON_STRATEGY_NOTIFY.IFormRule) => (
+        <>
+          <Select></Select>
+          <Switch
+            checked={isRecover}
+            onChange={(checked) => handleEditEditingRule(key, { key: 'isRecover', value: checked })}
+          />
+        </>
+      ),
+    },
     {
       title: i18n.t('operate'),
       width: 65,
