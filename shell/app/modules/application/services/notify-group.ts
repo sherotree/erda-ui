@@ -42,3 +42,23 @@ export const updateNotifyGroups = ({ id, ...rest }: COMMON_NOTIFY.ICreateNotifyG
     .send(rest)
     .then((response: any) => response.body);
 };
+
+// notify channels
+// payload:
+export const getNotifyChannels = (payload: { page: number; pageSize: number }) => {
+  return agent
+    .get('/api/notify-channels')
+    .query(payload)
+    .then((response: any) => response.body);
+};
+
+export const getNotifyChannelTypes = () => {
+  return agent.get('/api/notify-channel/types').then((response: any) => response.body);
+};
+
+export const setNotifyChannelEnable = (payload: { id: string; enable: boolean }) => {
+  return agent
+    .put('/api/notify-channel/enable')
+    .query(payload)
+    .then((response: any) => response.body);
+};

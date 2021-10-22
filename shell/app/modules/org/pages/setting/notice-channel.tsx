@@ -15,8 +15,9 @@ import React from 'react';
 import moment from 'moment';
 import i18n from 'i18n';
 import { head, isEmpty, map, take } from 'lodash';
-import { Button, message, Modal, Select, Spin, Table, Tooltip } from 'core/nusi';
-import { Avatar, ErdaCustomIcon, FormModal, MemberSelector, useSwitch, useUpdate } from 'common';
+import { Button, message, Modal, Select, Spin, Table, Tooltip, Switch } from 'core/nusi';
+import { Avatar, ErdaCustomIcon, FormModal, MemberSelector } from 'common';
+import { useUpdate } from 'common/use-hooks';
 import { ColumnProps, FormInstance } from 'core/common/interface';
 import { useMount, useUnmount } from 'react-use';
 import { useUserMap } from 'core/stores/userMap';
@@ -71,13 +72,32 @@ const groupTargetMap = {
   role: i18n.t('member role'),
 };
 
-// const notifyRoleMap = {
-//   Manager: i18n.t('administrator'),
-//   Developer: i18n.t('developer'),
-//   Tester: i18n.t('tester'),
-//   Operator: i18n.t('org:operator'),
-// };
-
+const data = {
+  data: [
+    {
+      channelProviderType: {
+        displayName: 'Example',
+        name: 'Example',
+      },
+      config: {},
+      createAt: 'Example',
+      creatorName: 'Example',
+      enable: true,
+      id: 'Example',
+      name: 'Example',
+      scopeId: 'Example',
+      scopeType: 'Example',
+      type: {
+        displayName: 'Example',
+        name: 'Example',
+      },
+      updateAt: 'Example',
+    },
+  ],
+  page: 1,
+  pageSize: 1,
+  total: 1,
+};
 interface IProps {
   commonPayload: {
     scopeType: string;
@@ -91,14 +111,14 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
   const notifyGroups = notifyGroupStore.useStore((s) => s.notifyGroups);
   const userMap = useUserMap();
   const formRef = React.useRef<FormInstance>(null);
-
+  const paging = notifyGroupStore.useStore((s) => s.paging);
   const roleMap = memberStore.useStore((s) => s.roleMap);
   const { getRoleMap } = memberStore.effects;
 
   const { getNotifyGroups, deleteNotifyGroups, createNotifyGroups, updateNotifyGroups } = notifyGroupStore.effects;
   const { clearNotifyGroups } = notifyGroupStore.reducers;
   const [loading] = useLoading(notifyGroupStore, ['getNotifyGroups']);
-  const [modalVisible, openModal, closeModal] = useSwitch(false);
+  const [visible, setIsVisible] = React.useState(false);
   const [{ activedData, groupType }, updater, update] = useUpdate({
     activedData: {},
     groupType: '',
@@ -133,7 +153,7 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
   };
 
   const handleEdit = ({ name, targets, id }: COMMON_NOTIFY.INotifyGroup) => {
-    openModal();
+    setIsVisible(true);
     const { type, values } = targets[0];
     let _targets;
     switch (type) {
@@ -228,7 +248,7 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
       groupType: '',
       activedData: {},
     });
-    closeModal();
+    setIsVisible(false);
   };
 
   const fieldsList = [
@@ -264,6 +284,28 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
       },
     },
     {
+      name: 'type',
+      label: i18n.d('服务商'),
+      required: true,
+      getComp: ({ form }: { form: FormInstance }) => {
+        return (
+          <Select
+            defaultValue={groupType}
+            onSelect={(value: any) => {
+              updater.groupType(value);
+              form.setFieldsValue({ targets: undefined });
+            }}
+          >
+            {map(groupTargetMap, (name, value) => (
+              <Select.Option value={value} key="value">
+                {name}
+              </Select.Option>
+            ))}
+          </Select>
+        );
+      },
+    },
+    {
       name: 'accessKey',
       label: 'AccessKey',
       required: true,
@@ -275,6 +317,24 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
     {
       name: 'accessKeySecret',
       label: 'AccessKeySecret',
+      required: true,
+      itemProps: {
+        disabled: isEditing,
+        maxLength: 50,
+      },
+    },
+    {
+      name: 'accessKeySecret',
+      label: '短信签名',
+      required: true,
+      itemProps: {
+        disabled: isEditing,
+        maxLength: 50,
+      },
+    },
+    {
+      name: 'accessKeySecret',
+      label: '短信模板',
       required: true,
       itemProps: {
         disabled: isEditing,
@@ -381,14 +441,21 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
     },
     {
       title: i18n.d('渠道类型'),
-      dataIndex: 'targets',
+      width: 160,
+      dataIndex: 'type',
       className: 'notify-info',
       ellipsis: true,
-      render: (targets) => <div className="flex-div flex truncate">xx类型</div>,
+      // render: (type) => type.displayName,
+    },
+    {
+      title: i18n.d('服务商'),
+      dataIndex: 'channelProviderType',
+      width: 200,
+      // render: (provider) => provider.displayName,
     },
     {
       title: i18n.t('default:creator'),
-      dataIndex: 'creator',
+      dataIndex: 'creatorName',
       width: 160,
       render: (text) => userMap[text]?.nick,
     },
@@ -417,6 +484,18 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
             >
               {i18n.t('application:delete')}
             </span>
+            <Switch
+              size="small"
+              defaultChecked={record.enable}
+              onChange={() => {
+                toggleAlert({
+                  id: record.id,
+                  enable: !record.enable,
+                }).then(() => {
+                  getAlerts({ pageNo });
+                });
+              }}
+            />
           </div>
         );
       },
@@ -429,7 +508,7 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
         <div
           className="notify-group-action hover-active"
           onClick={() => {
-            openModal();
+            setIsVisible(true);
           }}
         >
           <Button type="primary">{i18n.d('新建通知渠道')}</Button>
@@ -439,7 +518,7 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
         width={800}
         ref={formRef}
         title={`${isEditing ? i18n.t('application:edit group') : i18n.t('application:new Group')}`}
-        visible={modalVisible}
+        visible={visible}
         fieldsList={fieldsList}
         formData={activedData}
         onOk={(values: any) => {

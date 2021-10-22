@@ -106,43 +106,38 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
   const roleMap = memberStore.useStore((s) => s.roleMap);
   const { getRoleMap } = memberStore.effects;
   const alarmStrategyStore = alarmStrategyStoreMap[scopeType];
-  const [
-    alertList,
-    alarmPaging,
-    alarmScopeMap,
-    alertTypes,
-    // alertTriggerConditions,
-    // alertTriggerConditionsContent
-  ] = alarmStrategyStore.useStore((s) => [
-    s.alertList,
-    s.alarmPaging,
-    s.alarmScopeMap,
-    s.alertTypes,
-    s.alertTriggerConditions,
-    s.alertTriggerConditionsContent,
-  ]);
-  // TODO: 如果接口挂了
-  const alertTriggerConditions = [
-    {
-      displayName: '服务',
-      key: 'service_name',
-    },
-    {
-      key: 'application_name',
-      displayName: '应用',
-    },
-  ];
+  const [alertList, alarmPaging, alarmScopeMap, alertTypes, alertTriggerConditions, alertTriggerConditionsContent] =
+    alarmStrategyStore.useStore((s) => [
+      s.alertList,
+      s.alarmPaging,
+      s.alarmScopeMap,
+      s.alertTypes,
+      s.alertTriggerConditions,
+      s.alertTriggerConditionsContent,
+    ]);
 
-  const alertTriggerConditionsContent = [
-    {
-      key: 'application_name',
-      options: ['go-demo1', 'test', 'dev'],
-    },
-    {
-      key: 'service_name',
-      options: ['go-demo2', 'foo1', 'foo2', 'foo3'],
-    },
-  ];
+  // TODO: 如果接口挂了
+  // const alertTriggerConditions = [
+  //   {
+  //     displayName: '服务',
+  //     key: 'service_name',
+  //   },
+  //   {
+  //     key: 'application_name',
+  //     displayName: '应用',
+  //   },
+  // ];
+
+  // const alertTriggerConditionsContent = [
+  //   {
+  //     key: 'application_name',
+  //     options: ['go-demo1', 'test', 'dev'],
+  //   },
+  //   {
+  //     key: 'service_name',
+  //     options: ['go-demo2', 'foo1', 'foo2', 'foo3'],
+  //   },
+  // ];
 
   const { total, pageNo, pageSize } = alarmPaging;
   const orgId = orgStore.getState((s) => s.currentOrg.id);
@@ -640,7 +635,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
   const handleAddNotifyStrategy = () => {
     const activedGroup = notifyGroups[0];
     const fooOptions =
-      (activedGroup && notifyChannelMap[activedGroup.targets[0].type]).map((x) => ({
+      ((activedGroup && notifyChannelMap[activedGroup.targets[0].type]) || []).map((x) => ({
         key: x.value,
         display: x.name,
       })) || [];
@@ -743,11 +738,11 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
         groupType: item?.groupType?.join(','),
         level: item?.level?.join(','),
       })),
-      triggerConditions: state.triggerConditions.map((x) => ({
-        condition: x.condition,
-        operator: x.operator,
-        value: x.value,
-      })),
+      // triggerConditions: state.triggerConditions.map((x) => ({
+      //   condition: x.condition,
+      //   operator: x.operator,
+      //   value: x.value,
+      // })),
     };
 
     if (!isEmpty(state.editingFormRule)) {
@@ -762,6 +757,12 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     if (isEmpty(state.editingRules)) {
       warning({
         title: i18n.t('org:create at least one rule'),
+      });
+      return null;
+    }
+    if (isEmpty(state.notifies)) {
+      warning({
+        title: i18n.d('至少创建一条通知策略'),
       });
       return null;
     }
@@ -788,6 +789,12 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       editingRules: [],
       editingFormRule: {},
       activedGroupId: undefined,
+      triggerConditionValueOptions: [],
+      triggerConditions: [],
+      notifies: [],
+      fooOptions: [],
+      notifyLevel: null,
+      notifyMethod: null,
     });
     closeModal();
   };
