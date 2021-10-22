@@ -300,6 +300,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     {
       title: i18n.t('org:rule name'),
       dataIndex: 'alertIndex',
+      width: 300,
       render: (value: string, { key }) => (
         <Select
           value={value}
@@ -322,7 +323,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     {
       title: `${i18n.t('org:duration')}(min)`,
       dataIndex: 'window',
-      width: 130,
+      width: 120,
       render: (value: number, { key }: COMMON_STRATEGY_NOTIFY.IFormRule) => (
         <Select
           value={value}
@@ -375,10 +376,35 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       ),
     },
     // {
-    //   title: i18n.t('org:alarm after recovery'),
+    //   title: i18n.t('告警级别'),
+    //   dataIndex: 'level',
+    //   width: 105,
+    //   render: (item) => (
+    //     <Select
+    //       className="operator mr-2"
+    //       defaultValue={item}
+    //       onSelect={(value: any) => {
+    //         // handleEditEditingRuleField(key, index, { key: 'operator', value: String(value) });
+    //       }}
+    //     >
+    //       {map(operatorMap, (name, _key) => (
+    //         <Option key={_key} value={_key}>
+    //           {name}
+    //         </Option>
+    //       ))}
+    //     </Select>
+    //   ),
+    // },
+    // {
+    //   title: i18n.d('触发恢复'),
     //   dataIndex: 'isRecover',
     //   width: 105,
-    //   render: (isRecover: boolean, { key }: COMMON_STRATEGY_NOTIFY.IFormRule) => <Switch checked={isRecover} onChange={checked => handleEditEditingRule(key, { key: 'isRecover', value: checked })} />,
+    //   render: (isRecover: boolean, { key }: COMMON_STRATEGY_NOTIFY.IFormRule) => (
+    //     <Switch
+    //       checked={isRecover}
+    //       onChange={(checked) => handleEditEditingRule(key, { key: 'isRecover', value: checked })}
+    //     />
+    //   ),
     // },
     {
       title: i18n.t('operate'),
@@ -700,19 +726,48 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       },
     });
   };
-
+  console.log(state.triggerConditions, 'tri');
   const handleEditALarm = (id: number) => {
-    getAlertDetail(id).then(({ name, clusterNames, appIds, rules, notifies }: any) => {
+    getAlertDetail(id).then(({ name, clusterNames, appIds, rules, notifies, triggerConditions }: any) => {
       updater.editingFormRule({
         id,
         name,
         clusterName: clusterNames || [],
         appId: appIds || [],
         notifies,
-        // triggerConditions: state.triggerConditions,
       });
       updater.editingRules(map(rules, (rule) => ({ key: uniqueId(), ...rule })));
       updater.activedGroupId(notifies[0].groupId);
+
+      // TODO:
+      updater.triggerConditions(
+        (triggerConditions || []).map((x) => ({
+          id: uniqueId(),
+          condition: x.condition,
+          operator: x.operator,
+          value: x.value,
+        })),
+      );
+
+      updater.notifies(
+        (notifies || []).map((x) => ({
+          id: uniqueId(),
+          groupId: x.groupId,
+          level: x.level?.split(','),
+          groupType: x.groupType?.split(','),
+        })),
+      );
+      // TODO: 从接口取回后处理
+      // updater.triggerConditions([{ id: uniqueId(), condition: '', operator: '', value: '' }]);
+      // updater.notifies([
+      //   {
+      //     id: uniqueId(),
+      //     groupId: '',
+      //     level: [''],
+      //     groupType: [''],
+      //   },
+      // ]);
+
       openModal();
     });
   };
@@ -720,7 +775,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
   const handleAddAlarm = (param: any) => {
     const { name, clusterName, appId, silence = '', silencePolicy } = param;
     const [value, unit] = silence.split('-');
-
+    console.log(state.notifies, 888);
     const payload: COMMON_STRATEGY_NOTIFY.IAlertBody = {
       name,
       clusterNames: clusterName,
@@ -738,11 +793,11 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
         groupType: item?.groupType?.join(','),
         level: item?.level?.join(','),
       })),
-      // triggerConditions: state.triggerConditions.map((x) => ({
-      //   condition: x.condition,
-      //   operator: x.operator,
-      //   value: x.value,
-      // })),
+      triggerConditions: state.triggerConditions.map((x) => ({
+        condition: x.condition,
+        operator: x.operator,
+        value: x.value,
+      })),
     };
 
     if (!isEmpty(state.editingFormRule)) {
@@ -897,7 +952,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
         </Button>
         <FormModal
           loading={getAlertDetailLoading}
-          width={1000}
+          width={1200}
           visible={modalVisible}
           onCancel={handleCloseModal}
           title={isEmpty(state.editingFormRule) ? i18n.t('org:new strategy') : i18n.t('org:edit strategy')}
