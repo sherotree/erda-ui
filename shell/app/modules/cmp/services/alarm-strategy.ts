@@ -60,14 +60,14 @@ export const toggleAlert = ({ id, enable }: { id: string; enable: boolean }) => 
 
 export const getAlertTriggerConditions = (scopeType: string) => {
   return agent
-    .get(`/api/cmp/alerts/conditions`)
+    .get(`/api/alerts/conditions`)
     .query({ scopeType })
     .then((response: any) => response.body);
 };
 
 export const getAlertTriggerConditionsContent = (params: COMMON_STRATEGY_NOTIFY.IAlertTriggerConditionQuery) => {
   return agent
-    .get(`/api/cmp/alerts/conditions/value`)
+    .get(`/api/alerts/conditions/value`)
     .query(params)
     .then((response: any) => response.body);
 };
