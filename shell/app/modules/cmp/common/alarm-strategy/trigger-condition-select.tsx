@@ -23,12 +23,12 @@ export const TriggerConditionSelect = ({
         value={current?.condition}
         onSelect={(value) => {
           handleEditTriggerConditions(id, { key: 'condition', value });
-          const foo = valueOptionsList
+          const currentOptions = valueOptionsList
             .find((item: { key: any }) => item.key === value)
             .options.map((item: any) => ({ key: item, display: item }));
 
-          updater.triggerConditionValueOptions(foo);
-          handleEditTriggerConditions(id, { key: 'value', value: foo[0]?.key });
+          updater.triggerConditionValueOptions(currentOptions);
+          handleEditTriggerConditions(id, { key: 'value', value: currentOptions[0]?.key });
         }}
       >
         {map(keyOptions, (item) => {

@@ -100,44 +100,94 @@ const alertLevelOptions = [
   },
 ];
 
+const isRecoverOptions = [
+  {
+    key: 1,
+    display: '是',
+  },
+  {
+    key: 0,
+    display: '否',
+  },
+];
+
+const conditionOperatorOptions = [
+  {
+    key: 'like',
+    display: '匹配',
+    type: 'input',
+  },
+  {
+    key: 'not like',
+    display: '不匹配',
+    type: 'input',
+  },
+  {
+    key: 'all',
+    display: '全部',
+    type: 'none',
+  },
+  {
+    key: 'in',
+    display: 'in',
+    type: 'multiple',
+  },
+  {
+    key: 'eq',
+    display: '等于',
+    type: 'single',
+  },
+  {
+    key: 'neq',
+    display: '不等于',
+    type: 'single',
+  },
+];
+
 export default ({ scopeType, scopeId, commonPayload }: IProps) => {
   const memberStore = memberStoreMap[scopeType];
   const params = routeInfoStore.useStore((s) => s.params);
   const roleMap = memberStore.useStore((s) => s.roleMap);
   const { getRoleMap } = memberStore.effects;
   const alarmStrategyStore = alarmStrategyStoreMap[scopeType];
-  const [alertList, alarmPaging, alarmScopeMap, alertTypes, alertTriggerConditions, alertTriggerConditionsContent] =
-    alarmStrategyStore.useStore((s) => [
-      s.alertList,
-      s.alarmPaging,
-      s.alarmScopeMap,
-      s.alertTypes,
-      s.alertTriggerConditions,
-      s.alertTriggerConditionsContent,
-    ]);
+  const [
+    alertList,
+    alarmPaging,
+    alarmScopeMap,
+    alertTypes,
+    // alertTriggerConditions,
+    // alertTriggerConditionsContent
+  ] = alarmStrategyStore.useStore((s) => [
+    s.alertList,
+    s.alarmPaging,
+    s.alarmScopeMap,
+    s.alertTypes,
+    s.alertTriggerConditions,
+    s.alertTriggerConditionsContent,
+  ]);
 
   // TODO: 如果接口挂了
-  // const alertTriggerConditions = [
-  //   {
-  //     displayName: '服务',
-  //     key: 'service_name',
-  //   },
-  //   {
-  //     key: 'application_name',
-  //     displayName: '应用',
-  //   },
-  // ];
+  const alertTriggerConditions = [
+    {
+      displayName: '服务',
+      key: 'service_name',
+    },
+    {
+      key: 'application_name',
+      displayName: '应用',
+    },
+  ];
 
-  // const alertTriggerConditionsContent = [
-  //   {
-  //     key: 'application_name',
-  //     options: ['go-demo1', 'test', 'dev'],
-  //   },
-  //   {
-  //     key: 'service_name',
-  //     options: ['go-demo2', 'foo1', 'foo2', 'foo3'],
-  //   },
-  // ];
+  const alertTriggerConditionsContent = [
+    {
+      key: 'application_name',
+      options: ['go-demo1', 'test', 'dev'],
+    },
+    {
+      key: 'service_name',
+      options: ['go-demo2', 'foo1', 'foo2', 'foo3'],
+    },
+  ];
 
   const { total, pageNo, pageSize } = alarmPaging;
   const orgId = orgStore.getState((s) => s.currentOrg.id);
@@ -174,11 +224,11 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
   const [state, updater, update] = useUpdate({
     editingRules: [] as any,
     editingFormRule: {},
-    activedGroupId: undefined,
+    activeGroupId: undefined,
     triggerConditionValueOptions: [],
     triggerConditions: [],
     notifies: [],
-    fooOptions: [],
+    groupTypeOptions: [],
     notifyLevel: null,
     notifyMethod: null,
   });
@@ -379,17 +429,17 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       title: i18n.t('告警级别'),
       dataIndex: 'level',
       width: 105,
-      render: (item) => (
+      render: (value: string, { key }) => (
         <Select
           className="operator mr-2"
-          defaultValue={item}
+          value={value}
           onSelect={(value: any) => {
-            // handleEditEditingRuleField(key, index, { key: 'operator', value: String(value) });
+            handleEditEditingRule(key, { key: 'level', value: String(value) });
           }}
         >
-          {map(operatorMap, (name, _key) => (
-            <Option key={_key} value={_key}>
-              {name}
+          {map(alertLevelOptions, (item) => (
+            <Option key={item.key} value={item.key}>
+              {item.display}
             </Option>
           ))}
         </Select>
@@ -401,11 +451,18 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       width: 105,
       render: (isRecover: boolean, { key }: COMMON_STRATEGY_NOTIFY.IFormRule) => (
         <>
-          <Select></Select>
-          <Switch
-            checked={isRecover}
-            onChange={(checked) => handleEditEditingRule(key, { key: 'isRecover', value: checked })}
-          />
+          <Select
+            value={isRecover}
+            onSelect={(value: any) => {
+              handleEditEditingRule(key, { key: 'isRecover', value: Boolean(value) });
+            }}
+          >
+            {map(isRecoverOptions, (item) => (
+              <Option key={item.key} value={item.key}>
+                {item.display}
+              </Option>
+            ))}
+          </Select>
         </>
       ),
     },
@@ -463,7 +520,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
               current={state.triggerConditions?.find((x) => x.id === item.id)}
               handleEditTriggerConditions={handleEditTriggerConditions}
               handleRemoveTriggerConditions={handleRemoveTriggerConditions}
-              operatorOptions={alertTypes.operators}
+              operatorOptions={conditionOperatorOptions}
               valueOptions={state.triggerConditionValueOptions}
               valueOptionsList={alertTriggerConditionsContent}
             />
@@ -551,7 +608,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
           {state.notifies?.map((item) => (
             <NotifyStrategySelect
               alertLevelOptions={alertLevelOptions}
-              goToFoo={() => {
+              goToNotifyGroup={() => {
                 goTo(notifyGroupPage[scopeType], { projectId: scopeId, ...params });
               }}
               notifyGroups={notifyGroups}
@@ -563,7 +620,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
               current={state.notifies?.find((x) => x.id === item.id)}
               handleEditNotifyStrategy={handleEditNotifyStrategy}
               handleRemoveNotifyStrategy={handleRemoveNotifyStrategy}
-              valueOptions={state.fooOptions}
+              valueOptions={state.groupTypeOptions}
             />
           ))}
         </>
@@ -611,6 +668,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
           ...rest,
         })),
         isRecover: rule.isRecover,
+        level: rule.level,
       }),
     );
     updater.editingRules([...formRules, ...state.editingRules]);
@@ -662,19 +720,19 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
 
   // 添加单条触发条件
   const handleAddNotifyStrategy = () => {
-    const activedGroup = notifyGroups[0];
-    const fooOptions =
-      ((activedGroup && notifyChannelMap[activedGroup.targets[0].type]) || []).map((x) => ({
+    const activeGroup = notifyGroups[0];
+    const groupTypeOptions =
+      ((activeGroup && notifyChannelMap[activeGroup.targets[0].type]) || []).map((x) => ({
         key: x.value,
         display: x.name,
       })) || [];
-    updater.fooOptions(fooOptions);
+    updater.groupTypeOptions(groupTypeOptions);
     updater.notifies([
       {
         id: uniqueId(),
         groupId: notifyGroups[0]?.id,
         level: [alertLevelOptions?.[0]?.key],
-        groupType: [fooOptions[0]?.key],
+        groupType: [groupTypeOptions[0]?.key],
       },
       ...(state.notifies || []),
     ]);
@@ -729,7 +787,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       },
     });
   };
-  console.log(state.triggerConditions, 'tri');
+
   const handleEditALarm = (id: number) => {
     getAlertDetail(id).then(({ name, clusterNames, appIds, rules, notifies, triggerConditions }: any) => {
       updater.editingFormRule({
@@ -740,7 +798,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
         notifies,
       });
       updater.editingRules(map(rules, (rule) => ({ key: uniqueId(), ...rule })));
-      updater.activedGroupId(notifies[0].groupId);
+      updater.activeGroupId(notifies[0].groupId);
 
       // TODO:
       updater.triggerConditions(
@@ -846,11 +904,11 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
     update({
       editingRules: [],
       editingFormRule: {},
-      activedGroupId: undefined,
+      activeGroupId: undefined,
       triggerConditionValueOptions: [],
       triggerConditions: [],
       notifies: [],
-      fooOptions: [],
+      groupTypeOptions: [],
       notifyLevel: null,
       notifyMethod: null,
     });

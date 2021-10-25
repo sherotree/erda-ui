@@ -14,7 +14,7 @@ export const NotifyStrategySelect = ({
   valueOptions,
   updater,
   addNotificationGroupAuth,
-  goToFoo,
+  goToNotifyGroup,
   notifyGroups,
   alertLevelOptions,
   notifyChannelMap,
@@ -26,17 +26,17 @@ export const NotifyStrategySelect = ({
         className="mr-8"
         value={current?.groupId}
         onSelect={(groupId: any) => {
-          updater.activedGroupId(groupId);
+          updater.activeGroupId(groupId);
           handleEditNotifyStrategy(id, { key: 'groupId', value: groupId });
-          const activedGroup = find(notifyGroups, ({ id: id2 }) => id2 === groupId);
-          const fooOptions =
-            (activedGroup && notifyChannelMap[activedGroup.targets[0].type]).map((x) => ({
+          const activeGroup = find(notifyGroups, ({ id: id2 }) => id2 === groupId);
+          const groupTypeOptions =
+            (activeGroup && notifyChannelMap[activeGroup.targets[0].type]).map((x) => ({
               key: x.value,
               display: x.name,
             })) || [];
 
-          updater.fooOptions(fooOptions);
-          handleEditNotifyStrategy(id, { key: 'groupType', value: fooOptions?.[0]?.key });
+          updater.groupTypeOptions(groupTypeOptions);
+          handleEditNotifyStrategy(id, { key: 'groupType', value: groupTypeOptions?.[0]?.key });
         }}
         dropdownRender={(menu) => (
           <div>
@@ -44,7 +44,7 @@ export const NotifyStrategySelect = ({
             <Divider className="my-1" />
             <div className="text-xs px-2 py-1 text-desc" onMouseDown={(e) => e.preventDefault()}>
               <WithAuth pass={addNotificationGroupAuth}>
-                <span className="hover-active" onClick={goToFoo}>
+                <span className="hover-active" onClick={goToNotifyGroup}>
                   {i18n.t('org:add more notification groups')}
                 </span>
               </WithAuth>
