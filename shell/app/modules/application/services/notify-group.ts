@@ -46,7 +46,6 @@ export const updateNotifyGroups = ({ id, ...rest }: COMMON_NOTIFY.ICreateNotifyG
 // notify channels
 // payload:
 export const getNotifyChannels = (payload: { page: number; pageSize: number }) => {
-  console.log(payload, 1111);
   return agent
     .get('/api/notify-channels')
     .query(payload)
@@ -60,6 +59,46 @@ export const getNotifyChannelTypes = () => {
 export const setNotifyChannelEnable = (payload: { id: string; enable: boolean }) => {
   return agent
     .put('/api/notify-channel/enable')
+    .send(payload)
+    .then((response: any) => response.body);
+};
+
+export const getNotifyChannel = (payload: { id: string }) => {
+  return agent
+    .get('/api/notify-channel')
+    .query(payload)
+    .then((response: any) => response.body);
+};
+
+export const addNotifyChannel = (payload: {
+  channelProviderType: string;
+  config: object;
+  name: string;
+  type: string;
+}) => {
+  return agent
+    .post('/api/notify-channel')
+    .send(payload)
+    .then((response: any) => response.body);
+};
+
+export const editNotifyChannel = (payload: {
+  channelProviderType: string;
+  config: object;
+  name: string;
+  type: string;
+  enable: number;
+  id: string;
+}) => {
+  return agent
+    .put('/api/notify-channel')
+    .send(payload)
+    .then((response: any) => response.body);
+};
+
+export const deleteNotifyChannel = (payload: { id: string }) => {
+  return agent
+    .delete('/api/notify-channel')
     .query(payload)
     .then((response: any) => response.body);
 };

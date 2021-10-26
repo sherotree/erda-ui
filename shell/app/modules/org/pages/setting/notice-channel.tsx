@@ -14,241 +14,98 @@
 import React from 'react';
 import moment from 'moment';
 import i18n from 'i18n';
-import { head, isEmpty, map, take } from 'lodash';
-import { Button, message, Modal, Select, Spin, Table, Tooltip, Switch } from 'core/nusi';
-import { Avatar, ErdaCustomIcon, FormModal, MemberSelector } from 'common';
+import { isEmpty, map } from 'lodash';
+import { Button, Modal, Select, Spin, Table, Tooltip, Switch } from 'core/nusi';
+import { FormModal } from 'common';
 import { useUpdate } from 'common/use-hooks';
-import { ColumnProps, FormInstance } from 'core/common/interface';
-import { useMount, useUnmount } from 'react-use';
 import { useUserMap } from 'core/stores/userMap';
+import { ColumnProps, FormInstance } from 'core/common/interface';
+import { useMount } from 'react-use';
 import { useLoading } from 'core/stores/loading';
 import notifyGroupStore from 'application/stores/notify-group';
-import agent from 'agent';
 
 const { confirm } = Modal;
 
-enum TargetType {
-  USER = 'user',
-  EXTERNAL_USER = 'external_user',
-  DINGDING = 'dingding',
-  WEBHOOK = 'webhook',
-  ROLE = 'role',
-}
-
-export const notifyChannelOptionsMap = {
-  [TargetType.DINGDING]: [{ name: i18n.t('DingTalk'), value: 'dingding' }],
-  [TargetType.USER]: [
-    { name: i18n.t('application:email'), value: 'email' },
-    { name: i18n.t('site message'), value: 'mbox' },
-  ],
-  [TargetType.EXTERNAL_USER]: [{ name: i18n.t('application:email'), value: 'email' }],
-  [TargetType.WEBHOOK]: [{ name: i18n.t('application:webhook'), value: 'webhook' }],
-  [TargetType.ROLE]: [
-    { name: i18n.t('application:email'), value: 'email' },
-    { name: i18n.t('site message'), value: 'mbox' },
-  ],
-};
-
-// 当群组为成员或外部成员时，通知方式包含 电话/短信
-export const smsNotifyChannelOptionsMap = Object.assign({}, notifyChannelOptionsMap, {
-  [TargetType.USER]: [
-    { name: i18n.t('application:email'), value: 'email' },
-    { name: i18n.t('site message'), value: 'mbox' },
-    { name: i18n.t('SMS'), value: 'sms' },
-    { name: i18n.t('phone'), value: 'vms' },
-  ],
-  [TargetType.EXTERNAL_USER]: [
-    { name: i18n.t('application:email'), value: 'email' },
-    { name: i18n.t('SMS'), value: 'sms' },
-    { name: i18n.t('phone'), value: 'vms' },
-  ],
-});
-
-const groupTargetMap = {
-  user: i18n.t('application:member'),
-  dingding: i18n.t('application:DingTalk address'),
-  webhook: i18n.t('application:external api'),
-  external_user: i18n.t('application:external user'),
-  role: i18n.t('member role'),
-};
-
-const data = {
-  data: [
-    {
-      channelProviderType: {
-        displayName: 'Example',
-        name: 'Example',
-      },
-      config: {},
-      createAt: 'Example',
-      creatorName: 'Example',
-      enable: true,
-      id: 'Example',
-      name: 'Example',
-      scopeId: 'Example',
-      scopeType: 'Example',
-      type: {
-        displayName: 'Example',
-        name: 'Example',
-      },
-      updateAt: 'Example',
-    },
-  ],
-  page: 1,
-  pageSize: 1,
-  total: 1,
-};
-interface IProps {
-  commonPayload: {
-    scopeType: string;
-    scopeId: string;
-    projectId?: string;
-  };
-  memberStore: any;
-}
-
-const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
-  const notifyGroups = notifyGroupStore.useStore((s) => s.notifyGroups);
+const NotifyChannel = () => {
+  const notifyChannels = notifyGroupStore.useStore((s) => s.notifyChannels);
   const userMap = useUserMap();
-  const formRef = React.useRef<FormInstance>(null);
-  const paging = notifyGroupStore.useStore((s) => s.paging);
-  const roleMap = memberStore.useStore((s) => s.roleMap);
-  const { getRoleMap } = memberStore.effects;
-
-  const { getNotifyGroups, deleteNotifyGroups, createNotifyGroups, updateNotifyGroups, getNotifyChannels } =
+  const { setNotifyChannelEnable, deleteNotifyChannel, addNotifyChannel, editNotifyChannel, getNotifyChannels } =
     notifyGroupStore.effects;
-  const { clearNotifyGroups } = notifyGroupStore.reducers;
-  const [loading] = useLoading(notifyGroupStore, ['getNotifyGroups']);
+  const [loading] = useLoading(notifyGroupStore, ['getNotifyChannels']);
   const [visible, setIsVisible] = React.useState(false);
-  const [{ activedData, groupType }, updater, update] = useUpdate({
-    activedData: {},
-    groupType: '',
+  const [{ activeData, channelTypes, providerTypes }, updater, update] = useUpdate({
+    activeData: {},
+    channelTypes: [],
+    providerTypes: [],
   });
-  const isEditing = !isEmpty(activedData);
-
-  const isInMsp = commonPayload.scopeType.includes('msp');
-
-  const memberSelectProps = isInMsp
-    ? {
-        ...commonPayload,
-        scopeType: 'msp',
-      }
-    : commonPayload;
-
-  const scope = isInMsp ? 'msp' : commonPayload.scopeType;
+  const isEditing = !isEmpty(activeData);
 
   useMount(() => {
-    handleGetNotifyGroups();
-    getRoleMap({
-      scopeType: scope,
-      scopeId: commonPayload.scopeId,
-    });
+    handleGetNotifyChannels();
   });
 
-  useUnmount(() => {
-    clearNotifyGroups();
-  });
-
-  const handleGetNotifyGroups = (payload?: COMMON_NOTIFY.IGetNotifyGroupQuery) => {
-    getNotifyGroups({ ...commonPayload, ...payload });
+  const handleGetNotifyChannels = (payload?: COMMON_NOTIFY.IGetNotifyGroupQuery) => {
     getNotifyChannels({ page: 1, pageSize: 15 });
   };
 
-  const handleEdit = ({ name, targets, id }: COMMON_NOTIFY.INotifyGroup) => {
+  const handleEdit = ({ channelProviderType, config, name, type, id }: COMMON_NOTIFY.NotifyChannel) => {
     setIsVisible(true);
-    const { type, values } = targets[0];
-    let _targets;
-    switch (type) {
-      case TargetType.USER:
-      case TargetType.EXTERNAL_USER:
-      case TargetType.ROLE:
-        _targets = map(values, (v) => v.receiver);
-        break;
-      case TargetType.WEBHOOK:
-        _targets = values[0]?.receiver;
-        break;
-      default:
-        _targets = values[0];
-        break;
-    }
+
     update({
-      groupType: type,
-      activedData: {
+      activeData: {
         id,
+        channelProviderType,
+        config,
+        type,
         name,
-        targetType: type,
-        targets: _targets,
       },
     });
   };
 
-  const handleDele = (id: number) => {
+  const handleDele = (id: string) => {
     confirm({
       title: i18n.t('application:are you sure you want to delete this item?'),
-      content: i18n.t('application:the notification group will be permanently deleted'),
+      content: i18n.d('该通知渠道将永远删除'),
       onOk() {
-        deleteNotifyGroups(id).then(() => {
-          handleGetNotifyGroups();
+        deleteNotifyChannel(id).then(() => {
+          handleGetNotifyChannels();
         });
       },
     });
   };
 
-  const handleSubmit = (values: any, id?: number) => {
-    const { name, targetType, targets } = values;
-    let _values = [];
-    switch (targetType) {
-      case TargetType.USER:
-        _values = targets.filter((item: string) => !!item).map((t: string) => ({ receiver: t }));
-        break;
-      case TargetType.ROLE:
-      case TargetType.EXTERNAL_USER:
-        _values = targets.map((t: string) => ({ receiver: t }));
-        break;
-      case TargetType.WEBHOOK:
-        _values = [{ receiver: targets }];
-        break;
-      case TargetType.DINGDING:
-        _values = [targets];
-        break;
-      default:
-        break;
-    }
+  const handleSubmit = (values: any, id?: string) => {
+    const { name, channelProviderType, type, config, enable } = values;
     if (isEditing) {
-      updateNotifyGroups({
+      editNotifyChannel({
         id,
         name,
-        targets: [
-          {
-            type: targetType,
-            values: _values,
-          },
-        ],
+        type,
+        channelProviderType,
+        config,
+        enable,
       }).then(() => {
         handleCancel();
-        handleGetNotifyGroups();
+        handleGetNotifyChannels();
       });
       return;
     }
-    createNotifyGroups({
-      ...commonPayload,
+    addNotifyChannel({
+      id,
       name,
-      targets: [
-        {
-          type: targetType,
-          values: _values,
-        },
-      ],
+      type,
+      channelProviderType,
+      config,
+      enable,
     }).then(() => {
       handleCancel();
-      handleGetNotifyGroups();
+      handleGetNotifyChannels();
     });
   };
 
   const handleCancel = () => {
     update({
-      groupType: '',
-      activedData: {},
+      activeData: {},
     });
     setIsVisible(false);
   };
@@ -270,15 +127,14 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
       getComp: ({ form }: { form: FormInstance }) => {
         return (
           <Select
-            defaultValue={groupType}
+            defaultValue={channelTypes?.[0]?.name}
             onSelect={(value: any) => {
-              updater.groupType(value);
-              form.setFieldsValue({ targets: undefined });
+              updater.channelTypes(value);
             }}
           >
-            {map(groupTargetMap, (name, value) => (
-              <Select.Option value={value} key="value">
-                {name}
+            {map(channelTypes, ({ displayName, name }) => (
+              <Select.Option value={name} key={name}>
+                {displayName}
               </Select.Option>
             ))}
           </Select>
@@ -286,21 +142,20 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
       },
     },
     {
-      name: 'type',
+      name: 'channelProviderType',
       label: i18n.d('服务商'),
       required: true,
       getComp: ({ form }: { form: FormInstance }) => {
         return (
           <Select
-            defaultValue={groupType}
+            defaultValue={channelTypes?.[0]?.provider?.name}
             onSelect={(value: any) => {
-              updater.groupType(value);
-              form.setFieldsValue({ targets: undefined });
+              updater.channelTypes(value);
             }}
           >
-            {map(groupTargetMap, (name, value) => (
-              <Select.Option value={value} key="value">
-                {name}
+            {map(providerTypes, ({ displayName, name }) => (
+              <Select.Option value={name} key={name}>
+                {displayName}
               </Select.Option>
             ))}
           </Select>
@@ -308,7 +163,7 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
       },
     },
     {
-      name: 'accessKey',
+      name: 'config.accessKey',
       label: 'AccessKey',
       required: true,
       itemProps: {
@@ -317,7 +172,7 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
       },
     },
     {
-      name: 'accessKeySecret',
+      name: 'config.accessKeySecret',
       label: 'AccessKeySecret',
       required: true,
       itemProps: {
@@ -326,116 +181,24 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
       },
     },
     {
-      name: 'accessKeySecret',
-      label: '短信签名',
+      name: 'config.accessKeySecret',
+      label: i18n.d('短信签名'),
       required: true,
       itemProps: {
-        disabled: isEditing,
-        maxLength: 50,
+        maxLength: 500,
       },
     },
     {
-      name: 'accessKeySecret',
-      label: '短信模板',
+      name: 'config.accessKeySecret',
+      label: i18n.d('短信模板'),
       required: true,
       itemProps: {
-        disabled: isEditing,
-        maxLength: 50,
+        maxLength: 500,
       },
     },
   ] as any[];
 
-  let targetField;
-  const extraFields: any[] = [];
-  const testDingTalk = () => {
-    const values = formRef.current?.getFieldsValue();
-    const { secret, receiver } = values.targets;
-    if (!secret || !receiver) {
-      message.warn(i18n.t('common:please complete Dingding address and signature'));
-      return;
-    }
-    return agent
-      .post('/api/admin/notify/dingtalk-test')
-      .send({
-        secret,
-        webhook: receiver,
-      })
-      .then((response: any) => {
-        if (response.body.data.success) {
-          message.success(i18n.t('common:sent successfully, please check the test information in the group'));
-        } else {
-          message.warn(i18n.t('common:sending failed, please check the configuration information'));
-        }
-      });
-  };
-
-  switch (groupType) {
-    case TargetType.USER:
-      targetField = {
-        name: 'targets',
-        label: groupTargetMap[groupType],
-        required: true,
-        getComp: () => {
-          return <MemberSelector {...memberSelectProps} mode="multiple" type="Category" />;
-        },
-      };
-      break;
-    case TargetType.DINGDING:
-      targetField = {
-        name: ['targets', 'receiver'],
-        label: groupTargetMap[groupType],
-        type: 'textArea',
-        required: true,
-        itemProps: {
-          maxLength: 200,
-        },
-      };
-      extraFields.push({
-        name: ['targets', 'secret'],
-        label: i18n.t('application:signature'),
-        type: 'textArea',
-        required: true,
-        itemProps: {
-          maxLength: 200,
-        },
-        suffix: (
-          <span className="notify-test-dingtalk" onClick={() => testDingTalk()}>
-            {i18n.t('common:send test notification')}
-          </span>
-        ),
-      });
-      break;
-    case TargetType.WEBHOOK:
-      targetField = {
-        name: 'targets',
-        label: groupTargetMap[groupType],
-        type: 'textArea',
-        required: true,
-        itemProps: {
-          maxLength: 200,
-        },
-      };
-      break;
-    case TargetType.ROLE:
-      targetField = {
-        name: 'targets',
-        label: groupTargetMap[groupType],
-        required: true,
-        type: 'select',
-        options: map(roleMap, (name, value) => ({ value, name })),
-        itemProps: {
-          mode: 'multiple',
-        },
-      };
-      break;
-    default:
-      break;
-  }
-
-  groupType && fieldsList.push(targetField);
-  fieldsList.push(...extraFields);
-
-  const columns: Array<ColumnProps<COMMON_NOTIFY.INotifyGroup>> = [
+  const columns: Array<ColumnProps<COMMON_NOTIFY.NotifyChannel>> = [
     {
       title: i18n.d('渠道名称'),
       dataIndex: 'name',
@@ -447,13 +210,13 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
       dataIndex: 'type',
       className: 'notify-info',
       ellipsis: true,
-      // render: (type) => type.displayName,
+      render: (type) => type.displayName,
     },
     {
       title: i18n.d('服务商'),
       dataIndex: 'channelProviderType',
       width: 200,
-      // render: (provider) => provider.displayName,
+      render: (provider) => provider.displayName,
     },
     {
       title: i18n.t('default:creator'),
@@ -490,11 +253,11 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
               size="small"
               defaultChecked={record.enable}
               onChange={() => {
-                toggleAlert({
+                setNotifyChannelEnable({
                   id: record.id,
                   enable: !record.enable,
                 }).then(() => {
-                  getAlerts({ pageNo });
+                  handleGetNotifyChannels({ page: 1 });
                 });
               }}
             />
@@ -506,7 +269,7 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
 
   return (
     <div className="notify-group-manage">
-      <Tooltip title={i18n.t('application:new Group')}>
+      <Tooltip title={i18n.t('新建通知渠道')}>
         <div
           className="notify-group-action hover-active"
           onClick={() => {
@@ -518,19 +281,18 @@ const NotifyChannel = ({ memberStore, commonPayload }: IProps) => {
       </Tooltip>
       <FormModal
         width={800}
-        ref={formRef}
-        title={`${isEditing ? i18n.t('application:edit group') : i18n.t('application:new Group')}`}
+        title={`${isEditing ? i18n.d('编辑通知渠道') : i18n.t('新建通知渠道')}`}
         visible={visible}
         fieldsList={fieldsList}
-        formData={activedData}
+        formData={activeData}
         onOk={(values: any) => {
-          handleSubmit(values, isEditing && activedData.id);
+          handleSubmit(values, isEditing && activeData.id);
         }}
         onCancel={handleCancel}
         modalProps={{ destroyOnClose: true }}
       />
       <Spin spinning={loading}>
-        <Table rowKey="id" dataSource={notifyGroups} columns={columns} pagination={false} scroll={{ x: 800 }} />
+        <Table rowKey="id" dataSource={notifyChannels} columns={columns} pagination={false} scroll={{ x: 800 }} />
       </Spin>
     </div>
   );

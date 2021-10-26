@@ -20,6 +20,12 @@ import {
   createNotifyGroups,
   updateNotifyGroups,
   getNotifyChannels,
+  getNotifyChannelTypes,
+  setNotifyChannelEnable,
+  getNotifyChannel,
+  addNotifyChannel,
+  editNotifyChannel,
+  deleteNotifyChannel,
 } from '../services/notify-group';
 import { PAGINATION } from 'app/constants';
 
@@ -27,6 +33,7 @@ interface IState {
   notifyGroups: COMMON_NOTIFY.INotifyGroup[];
   notifyGroupsPaging: IPaging;
   paging: IPaging;
+  notifyChannels: COMMON_NOTIFY.NotifyChannel[];
 }
 
 const initState: IState = {
@@ -37,6 +44,7 @@ const initState: IState = {
     total: 0,
   },
   paging: getDefaultPaging(),
+  notifyChannels: [],
 };
 
 const convertScope = <T extends { scopeType?: COMMON_NOTIFY.ScopeType }>(payload: T): T => {
@@ -71,10 +79,33 @@ const notifyGroup = createStore({
         successMsg: i18n.t('updated successfully'),
       });
     },
-    async getNotifyChannels({ call }, payload: { page: number; pageSize: number }) {
-      console.log(payload);
-      const data = await call(getNotifyChannels, payload);
-      return data;
+    async getNotifyChannels({ call, update }, payload: { page: number; pageSize: number }) {
+      const list = await call(getNotifyChannels, payload);
+      update({ notifyChannels: list });
+    },
+    async getNotifyChannelTypes({ call }) {
+      await call(getNotifyChannelTypes);
+    },
+    async setNotifyChannelEnable({ call }, payload: { id: string; enable: boolean }) {
+      await call(setNotifyChannelEnable, payload);
+    },
+    async getNotifyChannel({ call }, payload: { id: string }) {
+      await call(getNotifyChannel, payload);
+    },
+    async addNotifyChannel(
+      { call },
+      payload: { channelProviderType: string; config: object; name: string; type: string },
+    ) {
+      await call(addNotifyChannel, payload);
+    },
+    async editNotifyChannel(
+      { call },
+      payload: { channelProviderType: string; config: object; name: string; type: string; enable: number; id: string },
+    ) {
+      await call(editNotifyChannel, payload);
+    },
+    async deleteNotifyChannel({ call }, payload: { id: string }) {
+      await call(deleteNotifyChannel, payload);
     },
   },
   reducers: {

@@ -293,6 +293,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       });
       _allRules = _allRules.concat(
         map(rules, ({ alertIndex, functions, ...rest }) => ({
+          level: alertLevelOptions?.[0]?.key, // TODO:可能需要从接口获取
           alertIndex: alertIndex.key,
           functions: map(functions, ({ field, ...subRest }) => ({ field: field.key, ...subRest })),
           ...rest,
@@ -451,18 +452,10 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       width: 105,
       render: (isRecover: boolean, { key }: COMMON_STRATEGY_NOTIFY.IFormRule) => (
         <>
-          <Select
-            value={isRecover}
-            onSelect={(value: any) => {
-              handleEditEditingRule(key, { key: 'isRecover', value: Boolean(value) });
-            }}
-          >
-            {map(isRecoverOptions, (item) => (
-              <Option key={item.key} value={item.key}>
-                {item.display}
-              </Option>
-            ))}
-          </Select>
+          <Switch
+            checked={isRecover}
+            onChange={(checked) => handleEditEditingRule(key, { key: 'isRecover', value: checked })}
+          />
         </>
       ),
     },
@@ -667,8 +660,7 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
           field: field.key,
           ...rest,
         })),
-        isRecover: rule.isRecover,
-        level: rule.level,
+        level: alertLevelOptions?.[0]?.key, // TODO:可能需要从接口获取
       }),
     );
     updater.editingRules([...formRules, ...state.editingRules]);
@@ -711,7 +703,8 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
       {
         id: uniqueId(),
         condition: alertTriggerConditions[0]?.key,
-        operator: alertTypes.operators?.[0]?.key,
+        // operator: alertTypes.operators?.[0]?.key,
+        operator: conditionOperatorOptions?.[0].key,
         value: currentTriggerValues[0]?.key,
       },
       ...(state.triggerConditions || []),
@@ -769,13 +762,13 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
   };
 
   // 编辑单条规则下的指标
-  const handleEditEditingRuleField = (id: string, index: number, item: { key: string; value: any }) => {
+  const handleEditEditingRuleField = (key: string, index: number, item: { key: string; value: any }) => {
     const rules = cloneDeep(state.editingRules);
-    const { functions } = find(rules, { id });
+    const { functions } = find(rules, { key }) || {};
     const functionItem = functions[index];
 
     fill(functions, { ...functionItem, [item.key]: item.value }, index, index + 1);
-    handleEditEditingRule(id, { key: 'functions', value: functions });
+    handleEditEditingRule(key, { key: 'functions', value: functions });
   };
 
   const handleDeleteAlarm = (id: number) => {
@@ -818,16 +811,6 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
           groupType: x.groupType?.split(','),
         })),
       );
-      // TODO: 从接口取回后处理
-      // updater.triggerConditions([{ id: uniqueId(), condition: '', operator: '', value: '' }]);
-      // updater.notifies([
-      //   {
-      //     id: uniqueId(),
-      //     groupId: '',
-      //     level: [''],
-      //     groupType: [''],
-      //   },
-      // ]);
 
       openModal();
     });
@@ -836,7 +819,6 @@ export default ({ scopeType, scopeId, commonPayload }: IProps) => {
   const handleAddAlarm = (param: any) => {
     const { name, clusterName, appId, silence = '', silencePolicy } = param;
     const [value, unit] = silence.split('-');
-    console.log(state.notifies, 888);
     const payload: COMMON_STRATEGY_NOTIFY.IAlertBody = {
       name,
       clusterNames: clusterName,
