@@ -15,6 +15,7 @@ declare namespace MONITOR_STATUS {
   interface IDashboardQuery {
     projectId: string;
     env: string;
+    tenantId: string;
   }
 
   interface IChart {
@@ -73,6 +74,7 @@ declare namespace MONITOR_STATUS {
     projectId: string;
     id: string;
     config: Obj;
+    tenantId: string;
   }
 
   interface IPastIncidents {
