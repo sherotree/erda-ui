@@ -434,6 +434,7 @@ const Transaction = () => {
           rowKey="requestId"
           columns={columns}
           dataSource={dataSource}
+          onChange={() => queryTraceSlowTranslation(sortType, limit, url)}
           scroll={{ x: '100%' }}
         />
         <Drawer
