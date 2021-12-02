@@ -38,7 +38,7 @@ enum TargetType {
   ROLE = 'role',
 }
 
-export const notifyChannelOptionsMap = {
+export const dopNotifyChannelOptionsMap = {
   [TargetType.DINGDING]: [{ name: i18n.t('DingTalk'), value: 'dingding' }],
   [TargetType.USER]: [
     { name: i18n.t('dop:email'), value: 'email' },
@@ -48,6 +48,26 @@ export const notifyChannelOptionsMap = {
   [TargetType.EXTERNAL_USER]: [
     { name: i18n.t('dop:email'), value: 'email' },
     { name: i18n.t('SMS'), value: 'sms' },
+  ],
+  [TargetType.WEBHOOK]: [{ name: i18n.t('dop:webhook'), value: 'webhook' }],
+  [TargetType.ROLE]: [
+    { name: i18n.t('dop:email'), value: 'email' },
+    { name: i18n.t('site message'), value: 'mbox' },
+  ],
+};
+
+export const notifyChannelOptionsMap = {
+  [TargetType.DINGDING]: [{ name: i18n.t('DingTalk'), value: 'dingding' }],
+  [TargetType.USER]: [
+    { name: i18n.t('dop:email'), value: 'email' },
+    { name: i18n.t('site message'), value: 'mbox' },
+    { name: i18n.t('SMS'), value: 'sms' },
+    { name: i18n.t('telephone'), value: 'vms' },
+  ],
+  [TargetType.EXTERNAL_USER]: [
+    { name: i18n.t('dop:email'), value: 'email' },
+    { name: i18n.t('SMS'), value: 'sms' },
+    { name: i18n.t('telephone'), value: 'vms' },
   ],
   [TargetType.WEBHOOK]: [{ name: i18n.t('dop:webhook'), value: 'webhook' }],
   [TargetType.ROLE]: [

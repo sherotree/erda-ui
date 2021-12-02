@@ -25,7 +25,7 @@ import { useLoading } from 'core/stores/loading';
 import notifyGroupStore from '../../../../stores/notify-group';
 import appNotifyStore from '../../../../stores/notify';
 import {
-  notifyChannelOptionsMap,
+  dopNotifyChannelOptionsMap,
   ListTargets,
 } from 'application/pages/settings/components/app-notify/common-notify-group';
 
@@ -201,7 +201,7 @@ export const NotifyConfig = ({ commonPayload, memberStore }: IProps) => {
         label: i18n.t('notification method'),
         required: true,
         type: 'select',
-        options: (activedGroup && notifyChannelOptionsMap[activedGroup.targets[0].type]) || [],
+        options: (activedGroup && dopNotifyChannelOptionsMap[activedGroup.targets[0].type]) || [],
         itemProps: {
           mode: 'multiple',
         },
