@@ -137,7 +137,7 @@ const MicroServiceOverview = () => {
       return { ...itemOut, views };
     });
     updater.serviceList(list);
-  }, [overviewList]);
+  }, [overviewList, data]);
 
   const getOverview = () => {
     const serviceIdList = data?.list.map((item) => item?.id);
