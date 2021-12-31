@@ -52,7 +52,7 @@
 
       .big-icon {
         border-radius: 2px;
-        box-shadow: 0 0 0 10px $white;
+        box-shadow: 0 0 0 4px $white;
       }
     }
 
@@ -78,6 +78,10 @@
         letter-spacing: 0;
         line-height: 22px;
         margin-bottom: 12px;
+      }
+
+      .info-brief {
+        line-height: 22px;
       }
     }
   }
